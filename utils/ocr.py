@@ -46,7 +46,7 @@ def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
                 if is_deg_recog:
                     deg_ocr(img_name, result[0], path)
                 return avg
-    logging.warning('未找到匹配的文本,识别的信息: %s',result[0])
+    logging.warning('未找到匹配的文本,识别的信息: %s', result[0])
     return None
 
 
@@ -80,8 +80,11 @@ def get_image_center(image_path):
 
 
 if __name__ == '__main__':
-    do_ocr("down_pic")
-    avg = get_xy("start_game", True)
-    print(avg)
-    text = get_text_center("start_game", "进入游戏", avg, True)
-    print(text)
+    # get_xy("jjtp",True)
+    text = do_ocr("jjtp")
+    num = text.split('/')[0]
+    # print(num)
+    # avg = get_xy("start_game", True)
+    # print(avg)
+    # text = get_text_center("start_game", "进入游戏", avg, True)
+    # print(text)
