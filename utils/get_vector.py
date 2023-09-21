@@ -1,6 +1,6 @@
 import cv2
 import pyautogui
-
+import numpy as np
 
 def get_xy(img_model_path, ocr=False, template_threshold=0.8):
     """
@@ -41,6 +41,8 @@ def get_xy(img_model_path, ocr=False, template_threshold=0.8):
     else:
         # 匹配失败，返回None
         return None
+
+
 def get_box(img_model_path, ocr=False):
     """
     :param img_model_path:模型图片名称
@@ -71,6 +73,125 @@ def get_box(img_model_path, ocr=False):
 
     # 返回匹配区域坐标
     return [upper_left[0], upper_left[1], lower_right[0], lower_right[1]]
+
+
+def single_match(img_model_path, ocr=False, template_threshold=0.8):
+    # 屏幕截图
+    pyautogui.screenshot().save("../imgs/screenshot/screenshot.png")
+    # 保存图片到指定路径
+    target = cv2.imread("../imgs/screenshot/screenshot.png")
+    # 模板匹配
+    template = cv2.imread(f'../imgs/{img_model_path}.png')
+    # 获取图片坐标
+    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+    # 获得模板图片的高宽尺寸
+    theight, twidth = template.shape[:2]
+    # 归一化处理
+    cv2.normalize(result, result, 0, 1, cv2.NORM_MINMAX, -1)
+    # 寻找矩阵（一维数组当做向量，用Mat定义）中的最大值和最小值的匹配结果及其位置
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    # 匹配值转换为字符串
+    # 对于cv2.TM_SQDIFF及cv2.TM_SQDIFF_NORMED方法min_val越趋近与0匹配度越好，匹配位置取min_loc
+    # 对于其他方法max_val越趋近于1匹配度越好，匹配位置取max_loc
+    strmin_val = str(min_val)
+    # 绘制矩形边框，将匹配区域标注出来
+    # min_loc：矩形定点
+    # (min_loc[0]+twidth,min_loc[1]+theight)：矩形的宽高
+    # (0,0,225)：矩形的边框颜色；2：矩形边框宽度
+    cv2.rectangle(target, min_loc, (min_loc[0] + twidth, min_loc[1] + theight), (0, 0, 225), 2)
+    # 显示结果,并将匹配值显示在标题栏上
+    cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+def single_more_match(img_model_path, ocr=False, template_threshold=0.8):
+    # 屏幕截图
+    # 使用 pyautogui 库截取屏幕，并保存到指定路径
+
+    pyautogui.screenshot().save("../imgs/screenshot/screenshot.png")
+
+    # 保存图片到指定路径
+    # 将截图后的图片保存到指定路径
+
+    target = cv2.imread("../imgs/screenshot/screenshot.png")
+
+    # 将原始图像转换为灰度图像
+    # 使用 cv2.cvtColor() 函数将原始图像转换为灰度图像，以便进行模板匹配
+
+    img_gray = cv2.cvtColor(target, cv2.COLOR_BGR2GRAY)
+
+    # 模板匹配
+    # 使用 cv2.matchTemplate() 函数进行模板匹配，获取匹配结果
+
+    template = cv2.imread(f'../imgs/{img_model_path}.png', 0)
+    h, w = template.shape[:2]
+
+    res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
+
+    # 获取匹配程度大于指定阈值的坐标
+    # 使用 np.where() 函数获取匹配程度大于指定阈值的坐标
+
+    threshold = 0.8
+    loc = np.where(res >= threshold)
+
+    # np.where返回的坐标值(x,y)是(h,w)，注意h,w的顺序
+    # 将 np.where() 函数返回的坐标值逆序，以便正确绘制矩形框
+
+    for pt in zip(*loc[::-1]):
+        # 计算矩形框的右下角坐标
+        bottom_right = (pt[0] + w, pt[1] + h)
+
+        # 在原始图像上画出矩形框
+        cv2.rectangle(target, pt, bottom_right, (0, 0, 255), 2)
+
+    # 保存结果
+    # 将处理后的图像保存到指定路径
+
+    cv2.imwrite("img.jpg", target)
+
+    # 显示结果
+    # 使用 cv2.imshow() 函数显示处理后的图像
+
+    cv2.imshow('img', target)
+
+    # 等待用户输入
+    # 使用 cv2.waitKey() 函数等待用户输入
+
+    cv2.waitKey(0)
+
+    cv2.destroyAllWindows()
+
+
+def find_xy(img_model_path, ocr=False, template_threshold=0.8):
+    """
+     :param img_model_path:模型图片名称
+     :return:匹配的xy
+     :TODO 匹配完模板进行是否点击校验
+     """
+    # 屏幕截图
+    pyautogui.screenshot().save("../imgs/screenshot/screenshot.png")
+    # 保存图片到指定路径
+    img = cv2.imread("../imgs/screenshot/screenshot.png")
+    # 模板匹配
+    img_template = cv2.imread(f'../imgs/{img_model_path}.png')
+
+    res = do_match(img,img_template)
+
+    if res[0]> template_threshold:
+        return res[1]
+    else: None
+
+# 进行匹配
+# 并返回 置信度 和 坐标
+def do_match(target, template):
+    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    height, width, channels = template.shape
+    lower_right = (min_loc[0] + width, min_loc[1] + height)
+
+    avg = (int((min_loc[0] + lower_right[0]) / 2), int((min_loc[1] + lower_right[1]) / 2))
+    return ((max_val - min_val), avg)
 
 
 if __name__ == '__main__':
