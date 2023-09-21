@@ -15,17 +15,29 @@ def click(var_avg, time=0):
 
 
 def click_current(second=1):
-    time.sleep(second)
+    t.sleep(second)
     pyautogui.click()
 
 
 def auto_click(img_model_path, name, time=0, x=0, y=0):
-    avg = get_xy(img_model_path, False)
+    avg = get_xy(img_model_path)
     if avg == None:
         print(f'没有匹配{name}')
         return False
     print(f'正在点击{name},坐标xy:{avg[0], avg[1]}')
     x += avg[0]
     y += avg[1]
+    click((x, y), time)
+    return True
+def auto_click(img_model_path,region, name, time=0, x=0, y=0):
+    avg = get_xy(img_model_path,region)
+    if avg == None:
+        print(f'没有匹配{name}')
+        return False
+    print(f'正在点击{name},坐标xy:{avg[0], avg[1]}')
+    x += avg[0]
+    y += avg[1]
+
+
     click((x, y), time)
     return True

@@ -2,42 +2,29 @@ import cv2
 import pyautogui
 import numpy as np
 
-def get_xy(img_model_path, ocr=False, template_threshold=0.8):
+H = 1440
+W = 2560
+
+
+def get_xy(img_model_path, region=None, is_dbug=False, template_threshold=0.8):
     """
     :param img_model_path:模型图片名称
     :return:匹配的xy
     """
     # 屏幕截图
-    pyautogui.screenshot().save("../imgs/screenshot/screenshot.png")
+    pyautogui.screenshot(region).save("../imgs/screenshot/screenshot.png")
     # 保存图片到指定路径
     img = cv2.imread("../imgs/screenshot/screenshot.png")
     # 模板匹配
     img_template = cv2.imread(f'../imgs/{img_model_path}.png')
     # 获取图片坐标
-    result = cv2.matchTemplate(img, img_template, cv2.TM_SQDIFF_NORMED)
-    if ocr:
-        # 保存路径
-        path = f'../imgs/result_imgs/{img_model_path}.png'
-
-        upper_left = cv2.minMaxLoc(result)[2]
-        # 在img上标记匹配位置
-        cv2.rectangle(img, upper_left, (upper_left[0] + img_template.shape[1], upper_left[1] + img_template.shape[0]),
-                      (0, 0, 255), 2)
-        roi = img[upper_left[1]:upper_left[1] + img_template.shape[0],
-              upper_left[0]:upper_left[0] + img_template.shape[1]]
-        cv2.imwrite(path, roi)
-
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-
+    if region != None:
+        res = do_match(img, img_template, region, is_dbug)
+    else:
+        res = do_match(img, img_template, is_dbug)
     # 使用模板匹配的置信度进行比较
-    if (max_val - min_val) > template_threshold:
-        # 匹配成功，返回坐标（这里假设坐标为左上角）
-        height, width, channels = img_template.shape
-        lower_right = (min_loc[0] + width, min_loc[1] + height)
-
-        avg = (int((min_loc[0] + lower_right[0]) / 2), int((min_loc[1] + lower_right[1]) / 2))
-        # x, y = min_loc
-        return avg
+    if res[0] > template_threshold:
+        return res[1]
     else:
         # 匹配失败，返回None
         return None
@@ -176,21 +163,55 @@ def find_xy(img_model_path, ocr=False, template_threshold=0.8):
     # 模板匹配
     img_template = cv2.imread(f'../imgs/{img_model_path}.png')
 
-    res = do_match(img,img_template)
+    res = do_match(img, img_template)
 
-    if res[0]> template_threshold:
+    if res[0] > template_threshold:
         return res[1]
-    else: None
+    else:
+        None
+
 
 # 进行匹配
 # 并返回 置信度 和 坐标
-def do_match(target, template):
+def do_match(target, template, is_debug=False):
     result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     height, width, channels = template.shape
     lower_right = (min_loc[0] + width, min_loc[1] + height)
 
     avg = (int((min_loc[0] + lower_right[0]) / 2), int((min_loc[1] + lower_right[1]) / 2))
+    if is_debug:
+        # 绘制矩形边框，将匹配区域标注出来
+        # min_loc：矩形定点
+        # (min_loc[0]+twidth,min_loc[1]+theight)：矩形的宽高
+        # (0,0,225)：矩形的边框颜色；2：矩形边框宽度
+        strmin_val = str(min_val)
+        cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2)
+        # 显示结果,并将匹配值显示在标题栏上
+        cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+    return ((max_val - min_val), avg)
+
+
+def do_match(target, template, region, is_debug=False):
+    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    height, width, channels = template.shape
+    lower_right = (min_loc[0] + width, min_loc[1] + height)
+    avg = (
+    (int((min_loc[0] + lower_right[0]) / 2) + region[0]), (int((min_loc[1] + lower_right[1]) / 2)) + (H - height))
+    if is_debug:
+        # 绘制矩形边框，将匹配区域标注出来
+        # min_loc：矩形定点
+        # (min_loc[0]+twidth,min_loc[1]+theight)：矩形的宽高
+        # (0,0,225)：矩形的边框颜色；2：矩形边框宽度
+        strmin_val = str(min_val)
+        cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2)
+        # 显示结果,并将匹配值显示在标题栏上
+        cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
     return ((max_val - min_val), avg)
 
 
