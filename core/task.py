@@ -134,19 +134,18 @@ class ScriptTask:
         # 因为上一次间隔如果传入了时间参数会对后一次计算产生影响
 
         times = np.zeros(len(self.args) + 1)
-        times[1] = 0
         temp = t.time()
         for j in range(count):
             for i, arg in enumerate(self.args):
                 # 此次点击开始时间戳
-                start = t.time()
+
                 # 计算点击间隔 start -temp ： 为 间隔时间
                 # TODO 优化 需要将上一次时间考虑进去
-                times[i] = start - temp
+
                 print(times[i],arg)
                 # 将此次时间 进行记录到arg中
                 # 记录上一次点击的开始时间
-                temp = start
+
                 start_time = t.time()
                 while t.time() - start_time < max_duration:
                     try:
@@ -163,7 +162,12 @@ class ScriptTask:
                 else:
                     # Max retries exceeded, raise an exception or handle it as needed
                     logger.error("{}秒点击失败：{}",max_duration,arg)
+
+                start = t.time()
+                times[i] = start - temp
+                temp = start
             logger.info("时间优化间隔:{}",times)
+
 
 if __name__ == '__main__':
     region1 = (0, 0, 1280, 750)
