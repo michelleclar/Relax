@@ -144,15 +144,12 @@ class ScriptTask:
 
                 # 计算点击间隔 start -temp ： 为 间隔时间
                 # TODO 优化 需要将上一次时间考虑进去
-
-                print(times[i], arg)
                 # 将此次时间 进行记录到arg中
                 # 记录上一次点击的开始时间
 
                 start_time = t.time()
                 while t.time() - start_time < max_duration:
                     try:
-                        print(times[i + 1])
                         self.auto_click(*arg).execute(times[i + 1])
                     except exception.NOT_FIND_Exception as e:
                         # Handle the custom exception (e.g., log it)
@@ -179,7 +176,7 @@ if __name__ == '__main__':
     :arg 格式标准 
     图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
     """
-    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
+    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
             (img_name.active_vector, "战斗胜利界面")]
     with concurrent.futures.ThreadPoolExecutor() as executor:
         task1 = ScriptTask().set_region(region1)
