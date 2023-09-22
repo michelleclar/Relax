@@ -11,16 +11,24 @@ from utils import generate
 import concurrent.futures
 
 logger = loguru.logger
+# 创建一个字典
+
+
 
 
 class ScriptTask:
-    def __init__(self):
-        self.args = []  # 运行流程的参数
+    def __init__(self,args):
+        self.args = args  # 运行流程的参数
         self.W, self.H = pyautogui.size()  # 获取当前屏幕分辨率
         self.is_debug = False  # 是否开启debug
         self.template_threshold = 0.8  # 置信度 默认0.8
         self.region = (0, 0, self.W, self.H)
         self.screenshot_name = "screenshot" + generate.generate_random_string(4)
+        self.templates = {}
+        for arg in args:
+            img = cv2.imread(f'../imgs/{arg[0]}.png')
+            self.templates[arg[0]] = img
+
 
     def set_region(self, region):
         self.region = region
@@ -45,7 +53,8 @@ class ScriptTask:
         # 保存图片到指定路径
         img = cv2.imread(f"../imgs/screenshot/{self.screenshot_name}.png")
         # 模板匹配
-        img_template = cv2.imread(f'../imgs/{img_model_path}.png')
+        # img_template = cv2.imread(f'../imgs/{img_model_path}.png')
+        img_template = self.templates[img_model_path]
         # 获取图片坐标
         res = self.do_match(img, img_template)
         # 使用模板匹配的置信度进行比较
@@ -95,14 +104,6 @@ class ScriptTask:
             """
             pyautogui.click(self.x, self.y, button='left')
             t.sleep(max(0,time))
-
-    def click(self, var_avg, time=0):
-        """
-        :param var_avg:
-        :return:
-        """
-        pyautogui.click(var_avg[0], var_avg[1], button='left')
-        t.sleep(max(time, 0))
 
     def auto_click(self, img_model_path, name, coordinates=None):
         if coordinates is None:
@@ -178,14 +179,12 @@ if __name__ == '__main__':
     """
     args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
             (img_name.active_vector, "战斗胜利界面")]
+    # 使用 map() 函数将每个元素添加到容器中
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        task1 = ScriptTask().set_region(region1)
-        task1.push_arg(*args)
+        task1 = ScriptTask(args).set_region(region1)
 
-
-        task2 = ScriptTask().set_region(region2)
-        task2.push_arg(*args)
-
+        task2 = ScriptTask(args).set_region(region2)
 
         future1 = executor.submit(task1.run)
         future2 = executor.submit(task2.run)
