@@ -8,7 +8,7 @@ import cv2
 
 from commons import img_name, exception
 from utils import generate
-import concurrent.futures
+import asyncio
 
 logger = loguru.logger
 # 创建一个字典
@@ -170,24 +170,41 @@ class ScriptTask:
             logger.info("时间优化间隔:{}", times)
 
 
-if __name__ == '__main__':
+async def main():
     region1 = (0, 0, 1280, 750)
     region2 = (1280, 0, 1280, 750)
-    """
-    :arg 格式标准 
-    图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
-    """
-    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
+
+    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
             (img_name.active_vector, "战斗胜利界面")]
-    # 使用 map() 函数将每个元素添加到容器中
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        task1 = ScriptTask(args).set_region(region1)
+    task1 = ScriptTask(args).set_region(region1)
+    task2 = ScriptTask(args).set_region(region2)
 
-        task2 = ScriptTask(args).set_region(region2)
+    # Create a list of tasks (coroutines) to run concurrently
+    tasks = [task1.run(), task2.run()]
 
-        future1 = executor.submit(task1.run)
-        future2 = executor.submit(task2.run)
+    # Run the tasks concurrently
+    await asyncio.gather(*tasks)
 
-        # Wait for both tasks to complete
-        concurrent.futures.wait([future1, future2])
+if __name__ == '__main__':
+    asyncio.run(main())
+    # region1 = (0, 0, 1280, 750)
+    # region2 = (1280, 0, 1280, 750)
+    # """
+    # :arg 格式标准
+    # 图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
+    # """
+    # args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
+    #         (img_name.active_vector, "战斗胜利界面")]
+    # # 使用 map() 函数将每个元素添加到容器中
+    #
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     task1 = ScriptTask(args).set_region(region1)
+    #
+    #     task2 = ScriptTask(args).set_region(region2)
+    #
+    #     future1 = executor.submit(task1.run)
+    #     future2 = executor.submit(task2.run)
+    #
+    #     # Wait for both tasks to complete
+    #     concurrent.futures.wait([future1, future2])
