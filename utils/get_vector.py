@@ -1,6 +1,8 @@
 import cv2
 import pyautogui
 import numpy as np
+import time as t
+from utils import img_name,click
 
 H = 1440
 W = 2560
@@ -234,13 +236,25 @@ class ScriptTask:
 
     def run(self, args):
         # 在这里定义你的方法
+        time = 0
+        temp = t.time()
+        for arg in args:
+            start = t.time()
+            time = start - temp
+            temp = start
+            avg = get_xy(arg[0],self.region)
+            click.click(avg,time)
+            click.auto_click(arg[0],self.region,args[1])
         print(f"Performing action in region {self.region}")
 
 
 if __name__ == '__main__':
     region1 = (0, 0, 1280, 750)
     region2 = (1280, 0, 1280, 750)
+    args = [(img_name.active_start, "活动开始界面", 10), (img_name.active_award, "资源结算界面", 0, 0, 400),
+            (img_name.active_vector, "战斗胜利界面")]
     task1 = ScriptTask(region1)
+    task1.push_arg(*args)
     task2 = ScriptTask(region2)
     # res = get_xy("active_start",region1,True)
     # box = get_box("start_game",True)

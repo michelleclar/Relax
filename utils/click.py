@@ -29,7 +29,7 @@ def auto_click(img_model_path, name, time=0, x=0, y=0):
     y += avg[1]
     click((x, y), time)
     return True
-def auto_click(img_model_path,region, name, time=0, x=0, y=0):
+def auto_click(img_model_path, name, time=0, x=0, y=0,region=(0,0,2560,1440)):
     avg = get_xy(img_model_path,region)
     if avg == None:
         print(f'没有匹配{name}')
