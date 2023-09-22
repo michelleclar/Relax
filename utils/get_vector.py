@@ -1,9 +1,19 @@
 import cv2
 import pyautogui
 import numpy as np
-import time as t
-from utils import img_name,click
+from commons import img_name
 
+import loguru
+
+logger = loguru.logger
+
+
+
+# # 记录一条 warn 级别的日志
+# logger.warning("This is a warning message")
+#
+# # 记录一条 error 级别的日志
+# logger.error("This is an error message")
 H = 1440
 W = 2560
 
@@ -234,23 +244,15 @@ class ScriptTask:
         for arg in args:
             self.args.append(arg)
 
-    def run(self, args):
-        # 在这里定义你的方法
-        time = 0
-        temp = t.time()
-        for arg in args:
-            start = t.time()
-            time = start - temp
-            temp = start
-            avg = get_xy(arg[0],self.region)
-            click.click(avg,time)
-            click.auto_click(arg[0],self.region,args[1])
-        print(f"Performing action in region {self.region}")
 
 
 if __name__ == '__main__':
     region1 = (0, 0, 1280, 750)
     region2 = (1280, 0, 1280, 750)
+    """
+    :arg 格式标准 
+    图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
+    """
     args = [(img_name.active_start, "活动开始界面", 10), (img_name.active_award, "资源结算界面", 0, 0, 400),
             (img_name.active_vector, "战斗胜利界面")]
     task1 = ScriptTask(region1)

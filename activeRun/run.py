@@ -1,7 +1,7 @@
-from utils import img_name, click, get_vector
+from utils import click
+from commons import img_name
 import cv2
 import pyautogui
-import numpy as np
 import time as t
 start = 0
 end = 0
