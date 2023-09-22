@@ -8,17 +8,21 @@ W = 2560
 
 def get_xy(img_model_path, region=None, is_dbug=False, template_threshold=0.8):
     """
+    :param template_threshold:
+    :param is_dbug:
+    :param region:
     :param img_model_path:模型图片名称
     :return:匹配的xy
     """
     # 屏幕截图
-    pyautogui.screenshot(region).save("../imgs/screenshot/screenshot.png")
+    pyautogui.screenshot("../imgs/screenshot/screenshot.png",region)
+     # .save("../imgs/screenshot/screenshot.png"))
     # 保存图片到指定路径
     img = cv2.imread("../imgs/screenshot/screenshot.png")
     # 模板匹配
     img_template = cv2.imread(f'../imgs/{img_model_path}.png')
     # 获取图片坐标
-    if region != None:
+    if region is not None:
         res = do_match(img, img_template, region, is_dbug)
     else:
         res = do_match(img, img_template, is_dbug)
@@ -200,7 +204,8 @@ def do_match(target, template, region, is_debug=False):
     height, width, channels = template.shape
     lower_right = (min_loc[0] + width, min_loc[1] + height)
     avg = (
-    (int((min_loc[0] + lower_right[0]) / 2) + region[0]), (int((min_loc[1] + lower_right[1]) / 2)) + (H - height))
+        (int((min_loc[0] + lower_right[0]) / 2) + region[0]),
+        (int((min_loc[1] + lower_right[1]) / 2)) + (H - height - region[1]))
     if is_debug:
         # 绘制矩形边框，将匹配区域标注出来
         # min_loc：矩形定点
@@ -214,8 +219,19 @@ def do_match(target, template, region, is_debug=False):
         cv2.destroyAllWindows()
     return ((max_val - min_val), avg)
 
+class ScriptTask:
+    def __init__(self, region):
+        self.region = region  # 初始化对象时传入 region 参数
+
+    def run(self,args):
+        # 在这里定义你的方法
+        print(f"Performing action in region {self.region}")
 
 if __name__ == '__main__':
-    res = get_xy("active_start")
+    region1 = (0,0,1280,750)
+    region2 = (1280,0,1280,750)
+    task1 = ScriptTask(region1)
+    task2 = ScriptTask(region2)
+    res = get_xy("active_start",region1,True)
     # box = get_box("start_game",True)
     # print(box)
