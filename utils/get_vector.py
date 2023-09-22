@@ -15,8 +15,8 @@ def get_xy(img_model_path, region=None, is_dbug=False, template_threshold=0.8):
     :return:匹配的xy
     """
     # 屏幕截图
-    pyautogui.screenshot("../imgs/screenshot/screenshot.png",region)
-     # .save("../imgs/screenshot/screenshot.png"))
+    pyautogui.screenshot("../imgs/screenshot/screenshot.png", region)
+    # .save("../imgs/screenshot/screenshot.png"))
     # 保存图片到指定路径
     img = cv2.imread("../imgs/screenshot/screenshot.png")
     # 模板匹配
@@ -219,19 +219,29 @@ def do_match(target, template, region, is_debug=False):
         cv2.destroyAllWindows()
     return ((max_val - min_val), avg)
 
+
 class ScriptTask:
+    args = []
+    region = (0, 0, 2560, 1440)
+
     def __init__(self, region):
         self.region = region  # 初始化对象时传入 region 参数
+        self.W, self.H = pyautogui.size()  # 获取当前屏幕分辨率
 
-    def run(self,args):
+    def push_arg(self, *args):
+        for arg in args:
+            self.args.append(arg)
+
+    def run(self, args):
         # 在这里定义你的方法
         print(f"Performing action in region {self.region}")
 
+
 if __name__ == '__main__':
-    region1 = (0,0,1280,750)
-    region2 = (1280,0,1280,750)
+    region1 = (0, 0, 1280, 750)
+    region2 = (1280, 0, 1280, 750)
     task1 = ScriptTask(region1)
     task2 = ScriptTask(region2)
-    res = get_xy("active_start",region1,True)
+    # res = get_xy("active_start",region1,True)
     # box = get_box("start_game",True)
     # print(box)
