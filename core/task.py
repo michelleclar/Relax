@@ -7,6 +7,8 @@ import time as t
 import cv2
 
 from commons import img_name, exception
+from utils import generate
+import concurrent.futures
 
 logger = loguru.logger
 
@@ -18,6 +20,7 @@ class ScriptTask:
         self.is_debug = False  # 是否开启debug
         self.template_threshold = 0.8  # 置信度 默认0.8
         self.region = (0, 0, self.W, self.H)
+        self.screenshot_name = "screenshot" + generate.generate_random_string(4)
 
     def set_region(self, region):
         self.region = region
@@ -37,10 +40,10 @@ class ScriptTask:
         :return:匹配的xy
         """
         # 屏幕截图
-        pyautogui.screenshot("../imgs/screenshot/screenshot.png", self.region)
+        pyautogui.screenshot(f"../imgs/screenshot/{self.screenshot_name}.png", self.region)
         # .save("../imgs/screenshot/screenshot.png"))
         # 保存图片到指定路径
-        img = cv2.imread("../imgs/screenshot/screenshot.png")
+        img = cv2.imread(f"../imgs/screenshot/{self.screenshot_name}.png")
         # 模板匹配
         img_template = cv2.imread(f'../imgs/{img_model_path}.png')
         # 获取图片坐标
@@ -91,7 +94,7 @@ class ScriptTask:
             :return:
             """
             pyautogui.click(self.x, self.y, button='left')
-            t.sleep(time)
+            t.sleep(max(0,time))
 
     def click(self, var_avg, time=0):
         """
@@ -99,7 +102,7 @@ class ScriptTask:
         :return:
         """
         pyautogui.click(var_avg[0], var_avg[1], button='left')
-        t.sleep(time)
+        t.sleep(max(time, 0))
 
     def auto_click(self, img_model_path, name, coordinates=None):
         if coordinates is None:
@@ -133,7 +136,7 @@ class ScriptTask:
         # 计算每次点击间隔 ，并将间隔 参数传递进去 计算时需要将上一次计算间隔忽略
         # 因为上一次间隔如果传入了时间参数会对后一次计算产生影响
 
-        times = np.zeros(len(self.args) + 1)
+        times = np.full(len(self.args) + 1, -1)
         temp = t.time()
         for j in range(count):
             for i, arg in enumerate(self.args):
@@ -142,14 +145,14 @@ class ScriptTask:
                 # 计算点击间隔 start -temp ： 为 间隔时间
                 # TODO 优化 需要将上一次时间考虑进去
 
-                print(times[i],arg)
+                print(times[i], arg)
                 # 将此次时间 进行记录到arg中
                 # 记录上一次点击的开始时间
 
                 start_time = t.time()
                 while t.time() - start_time < max_duration:
                     try:
-                        print(times[i+1])
+                        print(times[i + 1])
                         self.auto_click(*arg).execute(times[i + 1])
                     except exception.NOT_FIND_Exception as e:
                         # Handle the custom exception (e.g., log it)
@@ -161,12 +164,12 @@ class ScriptTask:
                         break
                 else:
                     # Max retries exceeded, raise an exception or handle it as needed
-                    logger.error("{}秒点击失败：{}",max_duration,arg)
+                    logger.error("{}秒点击失败：{}", max_duration, arg)
 
                 start = t.time()
-                times[i] = start - temp
+                times[i] = times[i] if (times[i] != -1) and ((times[i] - start - temp) < 0) else start - temp
                 temp = start
-            logger.info("时间优化间隔:{}",times)
+            logger.info("时间优化间隔:{}", times)
 
 
 if __name__ == '__main__':
@@ -178,6 +181,17 @@ if __name__ == '__main__':
     """
     args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
             (img_name.active_vector, "战斗胜利界面")]
-    task1 = ScriptTask().set_region(region1)
-    task1.push_arg(*args)
-    task1.run()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        task1 = ScriptTask().set_region(region1)
+        task1.push_arg(*args)
+
+
+        task2 = ScriptTask().set_region(region2)
+        task2.push_arg(*args)
+
+
+        future1 = executor.submit(task1.run)
+        future2 = executor.submit(task2.run)
+
+        # Wait for both tasks to complete
+        concurrent.futures.wait([future1, future2])
