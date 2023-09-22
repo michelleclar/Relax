@@ -12,13 +12,12 @@ logger = loguru.logger
 
 
 class ScriptTask:
-    args = []  # 运行流程的参数
-    W, H = pyautogui.size()  # 获取当前屏幕分辨率
-    region = (0, 0, W, H)
-    is_debug = False  # 是否开启debug
-    template_threshold = 0.8  # 置信度 默认0.8
-
-    # def __init__(self):
+    def __init__(self):
+        self.args = [] # 运行流程的参数
+        self.W, self.H = pyautogui.size() # 获取当前屏幕分辨率
+        self.is_debug = False  # 是否开启debug
+        self.template_threshold = 0.8 # 置信度 默认0.8
+        self.region = (0, 0, self.W, self.H)
     def set_region(self, region):
         self.region = region
         return self
