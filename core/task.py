@@ -1,34 +1,24 @@
-import pyautogui
-import loguru
-
-import numpy as np
-import time as t
-
-import cv2
-
 from commons import img_name, exception
-from utils import generate
-import asyncio
+from utils import util, log, format
 
-logger = loguru.logger
 # 创建一个字典
 
-
+logger = log.get_logger()
 
 
 class ScriptTask:
-    def __init__(self,args):
+    def __init__(self, args):
         self.args = args  # 运行流程的参数
-        self.W, self.H = pyautogui.size()  # 获取当前屏幕分辨率
+        self.W, self.H = util.current_resolution()
         self.is_debug = False  # 是否开启debug
         self.template_threshold = 0.8  # 置信度 默认0.8
         self.region = (0, 0, self.W, self.H)
-        self.screenshot_name = "screenshot" + generate.generate_random_string(4)
+        self.screenshot_name = "screenshot" + util.generate_random_string(4)
         self.templates = {}
+        self.img = None
         for arg in args:
-            img = cv2.imread(f'../imgs/{arg[0]}.png')
+            img = util.cv2_imread(f'../imgs/{arg[0]}.png')
             self.templates[arg[0]] = img
-
 
     def set_region(self, region):
         self.region = region
@@ -42,86 +32,57 @@ class ScriptTask:
         self.template_threshold = template_threshold
         return self
 
-    def get_xy(self, img_model_path):
+    def get_xy(self, template):
         """
-        :param img_model_path:模型图片名称
+        :param template:
         :return:匹配的xy
         """
-        # 屏幕截图
-        pyautogui.screenshot(f"../imgs/screenshot/{self.screenshot_name}.png", self.region)
-        # .save("../imgs/screenshot/screenshot.png"))
-        # 保存图片到指定路径
-        img = cv2.imread(f"../imgs/screenshot/{self.screenshot_name}.png")
-        # 模板匹配
-        # img_template = cv2.imread(f'../imgs/{img_model_path}.png')
-        img_template = self.templates[img_model_path]
         # 获取图片坐标
-        res = self.do_match(img, img_template)
+        res = self.do_match(template)
         # 使用模板匹配的置信度进行比较
         if res[0] > self.template_threshold:
-            return res[1]
+            avg = [res[1][0] + self.region[0], res[1][1] + self.region[1]]
+            return avg
         else:
             # 匹配失败，返回None
             return None
 
-    def do_match(self, target, template):
-        result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
-        # min_loc 左上角
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-        height, width, channels = template.shape
-        # 右下角
-        lower_right = (min_loc[0] + width, min_loc[1] + height)
-        avg = (
-            (int((min_loc[0] + lower_right[0]) / 2) + self.region[0]),
-            (int((min_loc[1] + lower_right[1]) / 2)) + self.region[1])
-        if self.is_debug:
-            # 绘制矩形边框，将匹配区域标注出来
-            # min_loc：矩形定点
-            # (min_loc[0]+twidth,min_loc[1]+theight)：矩形的宽高
-            # (0,0,225)：矩形的边框颜色；2：矩形边框宽度
-            strmin_val = str(min_val)
-            cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2)
-            # 显示结果,并将匹配值显示在标题栏上
-            cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target)
-            cv2.waitKey()
-            cv2.destroyAllWindows()
-        return ((max_val - min_val), avg)
-
-    class Execute:
-        x, y = 0, 0
-
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-
-        def execute(self, time=0):
-            self.click(time)
-
-        def click(self, time=0):
-            """
-            :param var_avg:
-            :return:
-            """
-            pyautogui.click(self.x, self.y, button='left')
-            t.sleep(max(0,time))
-
     def auto_click(self, img_model_path, name, coordinates=None):
         if coordinates is None:
             coordinates = [0, 0]
+        start = util.get_current_struct_time()
+        self.img = self.do_screenshot()
         avg = self.get_xy(img_model_path)
-        if avg is None:
-            logger.warning("没有匹配{},retry", name)
-            raise exception.NOT_FIND_Exception(f"没有匹配{name},retry")
 
-        logger.info("正在点击：{}，坐标xy：{}，{}", name, avg[0], avg[1])
+        if avg is None:
+            raise exception.NOT_FIND_Exception(f"😐😐😐没有匹配{name},retry")
+        logger.info("🖱️🖱️🖱️正在点击：{}，坐标xy：{}，{}", name, avg[0], avg[1])
         x, y = coordinates
         x += avg[0]
         y += avg[1]
+        util.left_click((x, y))
+        # 判断是否点击成功
+        img = self.do_screenshot()
+        if util.compare_img(self.img, img) is False:
+            # 可能没有进行点击
+            before_click = f'{util.format_time(format.ONLY_TIME, start)}--before--:{name}'
+            util.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
 
-        return self.Execute(x, y)
+            after_click = f'{util.format_time(format.ONLY_TIME)}--after--:{name}'
+            util.save_img(f"../imgs/fail/click/{after_click}.png", img)
 
-    def execute(self, time):
-        pass
+            raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}")
+        logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{avg[0]}，{avg[1]}")
+        return self
+
+    def do_screenshot(self):
+        return util.do_screenshot(f"../imgs/screenshot/{self.screenshot_name}.png", self.region)
+
+    def do_match(self, template):
+        return util.do_match(self.img, self.templates[template], self.is_debug)
+
+    def sleep(self, time):
+        util.sleep(time)
 
     def push_arg(self, *args):
         for arg in args:
@@ -137,8 +98,8 @@ class ScriptTask:
         # 计算每次点击间隔 ，并将间隔 参数传递进去 计算时需要将上一次计算间隔忽略
         # 因为上一次间隔如果传入了时间参数会对后一次计算产生影响
 
-        times = np.full(len(self.args) + 1, -1)
-        temp = t.time()
+        times = util.init_arr_obj(len(self.args) + 1, -1)
+        temp = util.get_current_timestamp()
         for j in range(count):
             for i, arg in enumerate(self.args):
                 # 此次点击开始时间戳
@@ -148,63 +109,49 @@ class ScriptTask:
                 # 将此次时间 进行记录到arg中
                 # 记录上一次点击的开始时间
 
-                start_time = t.time()
-                while t.time() - start_time < max_duration:
+                start_time = util.get_current_timestamp()
+                while util.get_current_timestamp() - start_time < max_duration:
                     try:
-                        self.auto_click(*arg).execute(times[i + 1])
+                        self.auto_click(*arg).sleep(times[i + 1])
+                        # 检查点击是否有效
                     except exception.NOT_FIND_Exception as e:
                         # Handle the custom exception (e.g., log it)
-                        logger.warning(f"Custom exception caught: {e}")
-                        t.sleep(1)
+                        logger.warning(e)
+                        util.sleep(1)
                         continue
+                    except exception.NOT_CLICK_Exception as e:
+                        logger.warning(f'{e},retry')
+                        continue
+                    except Exception as e:
+                        logger.error(f'😭😭😭{log.detail_error()}')
+                        raise e
                     else:
                         # Operation was successful, break out of the loop
                         break
                 else:
                     # Max retries exceeded, raise an exception or handle it as needed
-                    logger.error("{}秒点击失败：{}", max_duration, arg)
+                    logger.warning(f"🙃🙃🙃{max_duration}秒点击失败：{arg}")
 
-                start = t.time()
+                start = util.get_current_timestamp()
                 times[i] = times[i] if (times[i] != -1) and ((times[i] - start - temp) < 0) else start - temp
                 temp = start
-            logger.info("时间优化间隔:{}", times)
+            times[len(times) - 1] = times[0]
+            logger.debug(f"时间优化间隔:{times}")
+            max_duration = max(times) + 1
 
-
-async def main():
-    region1 = (0, 0, 1280, 750)
-    region2 = (1280, 0, 1280, 750)
-
-    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
-            (img_name.active_vector, "战斗胜利界面")]
-
-    task1 = ScriptTask(args).set_region(region1)
-    task2 = ScriptTask(args).set_region(region2)
-
-    # Create a list of tasks (coroutines) to run concurrently
-    tasks = [task1.run(), task2.run()]
-
-    # Run the tasks concurrently
-    await asyncio.gather(*tasks)
 
 if __name__ == '__main__':
-    asyncio.run(main())
-    # region1 = (0, 0, 1280, 750)
-    # region2 = (1280, 0, 1280, 750)
-    # """
-    # :arg 格式标准
-    # 图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
-    # """
+    region1 = (0, 0, 1280, 750)
+    region2 = (1280, 0, 1280, 750)
+    """
+    :arg 格式标准
+    图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
+    """
     # args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
     #         (img_name.active_vector, "战斗胜利界面")]
-    # # 使用 map() 函数将每个元素添加到容器中
-    #
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     task1 = ScriptTask(args).set_region(region1)
-    #
-    #     task2 = ScriptTask(args).set_region(region2)
-    #
-    #     future1 = executor.submit(task1.run)
-    #     future2 = executor.submit(task2.run)
-    #
-    #     # Wait for both tasks to complete
-    #     concurrent.futures.wait([future1, future2])
+    args = [(img_name.test_1, "式神录"), (img_name.test_2, "返回")]
+    # 使用 map() 函数将每个元素添加到容器中
+
+    # util.task_pool((ScriptTask(args).set_region(region1).run, 800), (ScriptTask(args).set_region(region2).run, 800))
+    # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
+    util.task_pool((ScriptTask(args).set_region(region2).run, 800))

@@ -10,3 +10,7 @@ down_Table = 'down_pix'
 active_start = 'active_start'
 active_award = 'active_award'
 active_vector = 'active_vector'
+
+# 测试
+test_1 = 'test_step1'
+test_2 = 'test_step2'
