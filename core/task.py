@@ -16,6 +16,7 @@ class ScriptTask:
         self.screenshot_name = "screenshot" + util.generate_random_string(4)
         self.templates = {}
         self.img = None
+        self.random = True  # false 表示区中点
         for arg in args:
             img = util.cv2_imread(f'../imgs/{arg[0]}.png')
             self.templates[arg[0]] = img
@@ -41,8 +42,17 @@ class ScriptTask:
         res = self.do_match(template)
         # 使用模板匹配的置信度进行比较
         if res[0] > self.template_threshold:
-            avg = [res[1][0] + self.region[0], res[1][1] + self.region[1]]
-            return avg
+            height, width = self.templates[template].shape[:2]
+            if self.random:
+                avg = util.get_random_xy(res[1], [height, width])
+                r = self.get_real_xy(avg)
+                logger.info(f'最佳匹配模板坐标左上角:{res[1]},随机范围：{height, width},random===>{avg}')
+                return r
+            else:
+                avg = util.get_cent_xy(res[1], [height, width])
+                r = self.get_real_xy(avg)
+                logger.info(f'最佳匹配模板坐标左上角:{res[1]},box：{height, width},center===>{avg}')
+                return r
         else:
             # 匹配失败，返回None
             return None
@@ -60,26 +70,34 @@ class ScriptTask:
         x, y = coordinates
         x += avg[0]
         y += avg[1]
-        util.left_click((x, y))
+        x, y = self.real_check_xy([x, y])
+        util.left_click([x, y])
         # 判断是否点击成功
-        img = self.do_screenshot()
-        if util.compare_img(self.img, img) is False:
-            # 可能没有进行点击
-            before_click = f'{util.format_time(format.ONLY_TIME, start)}--before--:{name}'
-            util.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
-
-            after_click = f'{util.format_time(format.ONLY_TIME)}--after--:{name}'
-            util.save_img(f"../imgs/fail/click/{after_click}.png", img)
-
-            raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}")
-        logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{avg[0]}，{avg[1]}")
+        # img = self.do_screenshot()
+        # if util.compare_img(self.img, img):
+        #     # 可能没有进行点击
+        #     before_click = f'{util.format_time(format.ONLY_TIME, start)}before-{name}'
+        #     util.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
+        #     after_click = f'{util.format_time(format.ONLY_TIME)}after-{name}'
+        #     util.save_img(f"../imgs/fail/click/{after_click}.png", img)
+        #     raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
+        logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{x}，{y}")
         return self
 
     def do_screenshot(self):
         return util.do_screenshot(f"../imgs/screenshot/{self.screenshot_name}.png", self.region)
 
     def do_match(self, template):
-        return util.do_match(self.img, self.templates[template], self.is_debug)
+        return util.do_match(self.img, self.templates[template])
+
+    def get_real_xy(self, avg):
+        return [avg[0] + self.region[0], avg[1] + self.region[1]]
+
+    def real_check_xy(self, avg):
+        return [min(self.region[2] + self.region[0], avg[0]), min(self.region[3] + self.region[1], avg[1])]
+
+    def check_xy(self, avg):
+        return [min(self.region[2], avg[0]), min(self.region[3], avg[1])]
 
     def sleep(self, time):
         util.sleep(time)
@@ -141,17 +159,17 @@ class ScriptTask:
 
 
 if __name__ == '__main__':
-    region1 = (0, 0, 1280, 750)
-    region2 = (1280, 0, 1280, 750)
+    region1 = (0, 0, 1270, 740)
+    region2 = (1290, 0, 1270, 740)
     """
     :arg 格式标准
     图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
     """
-    # args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 450)),
-    #         (img_name.active_vector, "战斗胜利界面")]
-    args = [(img_name.test_1, "式神录"), (img_name.test_2, "返回")]
+    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
+            (img_name.active_vector, "战斗胜利界面")]
+    # args = [(img_name.test_1, "式神录"), (img_name.test_2, "返回")]
     # 使用 map() 函数将每个元素添加到容器中
 
-    # util.task_pool((ScriptTask(args).set_region(region1).run, 800), (ScriptTask(args).set_region(region2).run, 800))
+    util.task_pool((ScriptTask(args).set_region(region1).run, 800), (ScriptTask(args).set_region(region2).run, 800))
     # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
-    util.task_pool((ScriptTask(args).set_region(region2).run, 800))
+    # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
