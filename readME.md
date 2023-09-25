@@ -22,6 +22,8 @@
 > 本地CUDA版本为12高于paddlepaddle最高支持版,目前在跑AI绘画
 
 ### 项目环境搭建
+> python版本 3.8 
+> 3.10测试也可以安装依赖
 
 ```sh
 pip install -r requirements.txt
