@@ -34,5 +34,3 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
 > 等以后出一个CUDA管理工具才会考虑
 > paddlepaddle-gpu
-
-> web界面采用 gradio
