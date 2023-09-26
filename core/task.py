@@ -72,15 +72,15 @@ class ScriptTask:
         y += avg[1]
         x, y = self.real_check_xy([x, y])
         util.left_click([x, y])
-        # 判断是否点击成功
-        # img = self.do_screenshot()
-        # if util.compare_img(self.img, img):
-        #     # 可能没有进行点击
-        #     before_click = f'{util.format_time(format.ONLY_TIME, start)}before-{name}'
-        #     util.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
-        #     after_click = f'{util.format_time(format.ONLY_TIME)}after-{name}'
-        #     util.save_img(f"../imgs/fail/click/{after_click}.png", img)
-        #     raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
+        #判断是否点击成功
+        img = self.do_screenshot()
+        if util.compare_img(self.img, img,2):
+            # 可能没有进行点击
+            before_click = f'{util.format_time(format.ONLY_TIME, start)}before-{name}'
+            util.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
+            after_click = f'{util.format_time(format.ONLY_TIME)}after-{name}'
+            util.save_img(f"../imgs/fail/click/{after_click}.png", img)
+            raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
         logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{x}，{y}")
         return self
 
