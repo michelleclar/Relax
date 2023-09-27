@@ -3,9 +3,6 @@ import logging
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 
-from utils.get_vector import get_xy
-
-
 def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
     '''
     获取OCR识别文本的实际中心坐标
