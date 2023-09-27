@@ -21,7 +21,7 @@ def generate_random_string(length=8):
 def do_screenshot(screenshot_path, region):
     # 屏幕截图
     pyautogui.screenshot(screenshot_path, region)
-    # 保存图片到指定路径
+    # 读取图片
     img = cv2.imread(screenshot_path)
     return img
 
@@ -151,7 +151,6 @@ def task_pool(*args):
         tasks.append(task)
         sleep(1)
 
-    # Wait for both tasks to complete
     wait(tasks)
 
 

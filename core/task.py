@@ -1,5 +1,6 @@
 from commons import img_name, exception
-from utils import util, log, format
+from utils import util, format
+from core.base import log
 
 # 创建一个字典
 

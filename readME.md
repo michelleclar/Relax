@@ -9,7 +9,6 @@
 | pyautogui     | 屏幕自动化控制库,用于获取屏幕截图等                    |
 | opencv-python | OpenCV计算机视觉库的Python接口,用于图片处理和裁剪       |
 | numpy         | Python科学计算库,用于矩阵运算和算法                 |
-| Pillow        | 图像处理库,用于图片读取,处理和保存                    |
 | paddlepaddle  | PaddlePaddle深度学习框架,提供深度学习功能           |
 | paddleocr     | PaddlePaddle深度学习框架的OCR识别工具,支持90多国语言识别 |
 | gradio        | web界面                                 |

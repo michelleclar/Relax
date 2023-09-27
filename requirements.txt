@@ -1,7 +1,7 @@
 pyautogui~=0.9.53
 opencv-python~=4.6.0.66
 numpy
-Pillow~=9.5.0
+#Pillow~=9.5.0 图像处理库,用于图片读取,处理和保存
 #pywin32
 paddlepaddle
 paddleocr~=2.6.1.3

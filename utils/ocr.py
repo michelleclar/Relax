@@ -1,5 +1,6 @@
 import os
 import logging
+from utils import util
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 
@@ -78,9 +79,10 @@ def get_image_center(image_path):
 
 if __name__ == '__main__':
     # get_xy("jjtp",True)
-    text = do_ocr("jiejie_num")
-    num = text.split('/')[0]
-    print(num)
+    util.do_screenshot("../imgs/screenshot/screenshot.png")
+    # text = do_ocr("jiejie_num")
+    # num = text.split('/')[0]
+    # print(num)
     # avg = get_xy("start_game", True)
     # print(avg)
     # text = get_text_center("start_game", "进入游戏", avg, True)
