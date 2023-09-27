@@ -4,6 +4,7 @@
 import cv2
 import numpy as np
 
+
 def do_match(target, template):
     """
     模板匹配
@@ -49,6 +50,7 @@ def cv2_imread(path):
     """
     return cv2.imread(path)
 
+
 # 保存图片
 def save_img(path, img):
     """
@@ -58,8 +60,9 @@ def save_img(path, img):
     :return:
     cv2.imwrite 保存中文会乱码
     """
-    cv2.imencode('.png',img)[1].tofile(path)
+    cv2.imencode('.png', img)[1].tofile(path)
     # cv2.imwrite(path, img)
+
 
 # 进行图像比较 返回是否匹配成功
 def compare_img(img1, img2, sore=10):

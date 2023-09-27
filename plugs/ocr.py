@@ -1,5 +1,7 @@
 import os
 import logging
+
+from core.base import image,log,screet
 from utils import util
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
@@ -79,7 +81,7 @@ def get_image_center(image_path):
 
 if __name__ == '__main__':
     # get_xy("jjtp",True)
-    util.do_screenshot("../imgs/screenshot/screenshot.png")
+    screet.do_screenshot("../imgs/screenshot/screenshot.png")
     # text = do_ocr("jiejie_num")
     # num = text.split('/')[0]
     # print(num)
