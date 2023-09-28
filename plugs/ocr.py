@@ -1,11 +1,8 @@
-import os
-import logging
-
-from core.base import image,log,screet
-from utils import util
+from core.base import image,screet,log
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 
+logger = log.get_logger()
 def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
     '''
     获取OCR识别文本的实际中心坐标
@@ -16,7 +13,7 @@ def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
     :param is_deg_recog: 是否进行倾斜矫正
     :return: 文本实际中心坐标，如果未找到匹配的文本则返回None
     '''
-    path = os.path.join('../', 'imgs/result_imgs/', img_name + '.png')
+    path = f'../imgs/result_imgs/{img_name}.png'
     ocr = PaddleOCR(use_angle_cls=True, lang="ch")
     # 图片中心x,y
     avg_pic = get_image_center(path)
@@ -40,18 +37,18 @@ def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
                 x_max = max(x1, x2, x3, x4)
                 y_min = min(y1, y2, y3, y4)
                 y_max = max(y1, y2, y3, y4)
-                # 计算中心点坐标               
+                # 计算中心点坐标
                 avg = ((x_min + x_max) / 2, (y_min + y_max) / 2)
                 avg = (avg[0] / x_scale, avg[1] / y_scale)
                 if is_deg_recog:
                     deg_ocr(img_name, result[0], path)
                 return avg
-    logging.warning('未找到匹配的文本,识别的信息: %s', result[0])
+    logger.warning('未找到匹配的文本,识别的信息: %s', result[0])
     return None
 
 
 def do_ocr(img_name, deg=False):
-    path = os.path.join('../', 'imgs/result_imgs/', img_name + '.png')
+    path = f'../imgs/result_imgs/{img_name}.png'
     ocr = PaddleOCR(use_angle_cls=True, lang="ch")
     result = ocr.ocr(path, cls=True)
     text = result[0][0][1][0]
@@ -72,8 +69,7 @@ def deg_ocr(img_name, result, path):
 
 
 def get_image_center(image_path):
-    image = Image.open(image_path)
-    image_width, image_height = image.size
+    image_width, image_height = image.cv2_imread(image_path)[:2]
     center_x = image_width // 2
     center_y = image_height // 2
     return center_x, center_y
