@@ -23,7 +23,8 @@ class ScriptTask:
         self.screenshot_name = "screenshot" + util.generate_random_string(4)
         self.templates = {}
         self.img = None
-        self.random = True  # false 表示区中点
+        self.random = False  # false 表示区中点
+        self.delay = 1
         for arg in args:
             img = image.cv2_imread(f'../imgs/{arg[0]}.png')
             self.templates[arg[0]] = img
@@ -85,7 +86,7 @@ class ScriptTask:
         screet.left_click([x, y])
         # 判断是否点击成功
         img = self.do_screenshot()
-        if image.compare_img(self.img, img, 2):
+        if image.compare_img(self.img, img, 3):
             # 可能没有进行点击
             before_click = f'{util.format_time(format.ONLY_TIME, start)}before-{name}'
             image.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
@@ -172,17 +173,17 @@ class ScriptTask:
 
 
 if __name__ == '__main__':
-    region1 = (0, 0, 1270, 740)
-    region2 = (1290, 0, 1270, 740)
+    region1 = (6, 36, 830, 463)
+    region2 = (870, 36, 830, 454)
     """
     :arg 格式标准
     图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
     """
-    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 400)),
+    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 240)),
             (img_name.active_vector, "战斗胜利界面")]
     # args = [(img_name.test_1, "式神录"), (img_name.test_2, "返回")]
     # 使用 map() 函数将每个元素添加到容器中
-
-    util.task_pool((ScriptTask(args).set_region(region1).run, 800), (ScriptTask(args).set_region(region2).run, 800))
-    # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
+    count = 900
+    # util.task_pool((ScriptTask(args).set_region(region1).run, count), (ScriptTask(args).set_region(region2).run, count))
+    util.task_pool((ScriptTask(args).set_region(region1).run, count))
     # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
