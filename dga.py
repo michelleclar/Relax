@@ -1,8 +1,9 @@
-
 from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
 
-
+"""
+orderedDict 可也记住键的插入顺序的字典 （map + linked）
+"""
 class DAG(object):
     """ Directed acyclic graph implementation. """
 
@@ -11,7 +12,10 @@ class DAG(object):
         self.reset_graph()
 
     def add_node(self, node_name, graph=None):
-        """ Add a node if it does not exist yet, or error out. """
+        """
+        Add a node if it does not exist yet, or error out.
+        如果节点尚不存在，请添加节点，否则出错。
+        """
         if not graph:
             graph = self.graph
         if node_name in graph:
@@ -19,6 +23,9 @@ class DAG(object):
         graph[node_name] = set()
 
     def add_node_if_not_exists(self, node_name, graph=None):
+        """
+        对外提供的添加接口
+        """
         try:
             self.add_node(node_name, graph=graph)
         except KeyError:
@@ -37,6 +44,9 @@ class DAG(object):
                 edges.remove(node_name)
 
     def delete_node_if_exists(self, node_name, graph=None):
+        """
+        对外提供的删除接口
+        """
         try:
             self.delete_node(node_name, graph=graph)
         except KeyError:
@@ -137,7 +147,12 @@ class DAG(object):
                 self.add_edge(ind_node, dep_node)
 
     def reset_graph(self):
-        """ Restore the graph to an empty state. """
+        """
+        Restore the graph to an empty state.
+        创建一个map
+        记录所有节点
+        节点表
+        """
         self.graph = OrderedDict()
 
     def ind_nodes(self, graph=None):
