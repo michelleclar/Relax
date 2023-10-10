@@ -192,6 +192,56 @@ class DAG(object):
         return len(self.graph)
 
 
+class DAG:
+  def __init__(self, vertices):
+    self.vertices = vertices
+    self.adjacency_list = {}
+    for vertex in vertices:
+      self.adjacency_list[vertex] = []
+
+  def add_edge(self, u, v):
+    self.adjacency_list[u].append(v)
+
+  def is_cyclic(self):
+    """
+    深度优先搜索，判断图是否有环。
+
+    Args:
+      None
+
+    Returns:
+      True，如果图有环；False，如果图没有环。
+    """
+
+    visited = set()
+
+    def dfs(u):
+      visited.add(u)
+      for v in self.adjacency_list[u]:
+        if v in visited:
+          return True
+        if dfs(v):
+          return True
+      return False
+
+    for vertex in self.vertices:
+      if vertex in visited:
+        continue
+      if dfs(vertex):
+        return True
+    return False
+
+
+def main():
+  vertices = ["A", "B", "C", "D", "E"]
+  dag = DAG(vertices)
+  dag.add_edge("A", "B")
+  dag.add_edge("A", "C")
+  dag.add_edge("B", "D")
+  dag.add_edge("C", "E")
+
+  print(dag.is_cyclic())
+
 if __name__ == '__main__':
     dag = DAG()
     dag.add_node("a")
