@@ -18,7 +18,7 @@ class ScriptTask:
         self.args = args  # 运行流程的参数
         self.W, self.H = screet.current_resolution()
         self.is_debug = False  # 是否开启debug
-        self.template_threshold = 0.8  # 置信度 默认0.8
+        self.template_threshold = 0.9  # 置信度 默认0.8
         self.region = (0, 0, self.W, self.H)
         self.screenshot_name = "screenshot" + util.generate_random_string(4)
         self.templates = {}
@@ -171,19 +171,22 @@ class ScriptTask:
             logger.debug(f"时间优化间隔:{times}")
             max_duration = max(times) + 1
 
-
-if __name__ == '__main__':
+def main():
     region1 = (6, 36, 830, 463)
     region2 = (870, 36, 830, 454)
     """
     :arg 格式标准
     图片名必须 ， 点击事件名（必须，用于日志检查），偏移（可选），点击间隔（可选，不推荐代码会自动优化点击间隔）
     """
-    args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 240)),
-            (img_name.active_vector, "战斗胜利界面")]
+    # args = [(img_name.active_start, "活动开始界面"), (img_name.active_award, "资源结算界面", (0, 240)),
+    #         (img_name.active_vector, "战斗胜利界面")]
     # args = [(img_name.test_1, "式神录"), (img_name.test_2, "返回")]
+    args = [(img_name.ready, "准备")]
     # 使用 map() 函数将每个元素添加到容器中
     count = 900
-    # util.task_pool((ScriptTask(args).set_region(region1).run, count), (ScriptTask(args).set_region(region2).run, count))
-    util.task_pool((ScriptTask(args).set_region(region1).run, count))
+    util.task_pool((ScriptTask(args).set_region(region1).run, count), (ScriptTask(args).set_region(region2).run, count))
+    # util.task_pool((ScriptTask(args).set_region(region1).run, count))
     # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
+
+if __name__ == '__main__':
+    main()

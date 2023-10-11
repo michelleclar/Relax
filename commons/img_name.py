@@ -14,3 +14,8 @@ active_vector = 'active_vector'
 # 测试
 test_1 = 'test_step1'
 test_2 = 'test_step2'
+
+# 道馆
+ready = 'ready'
+is_mark ='is_mark'
+not_mark='not_mark'
