@@ -160,7 +160,7 @@ class DAG(object):
         """ Returns a list of all nodes in the graph with no dependencies. """
         if graph is None:
             graph = self.graph
-
+        # 将遍历图中节点 
         dependent_nodes = set(
             node for dependents in graph.values() for node in dependents
         )
@@ -263,10 +263,9 @@ if __name__ == '__main__':
     dag.add_node("a")
     dag.add_node("b")
     dag.add_node("c")
-    dag.add_node("d")
     dag.add_edge("a", "b")
-    dag.add_edge("a", "d")
     dag.add_edge("b", "c")
+    dag.add_edge("c", "a")
     print(dag.topological_sort())
     print(dag.graph)
     print(dag.all_downstreams("b"))
