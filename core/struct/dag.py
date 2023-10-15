@@ -2,18 +2,21 @@ from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
 
 """
-orderedDict 可也记住键的插入顺序的字典 （map + linked）
+orderedDict 可以记住键的插入顺序的字典 （map + linked）
 """
 class DAG(object):
-    """ Directed acyclic graph implementation. """
+    """
+    有向无环图实现。
+    """
 
     def __init__(self):
-        """ Construct a new DAG with no nodes or edges. """
+        """
+        构造没有节点或边的新 DAG。
+        """
         self.reset_graph()
 
     def add_node(self, node_name, graph=None):
         """
-        Add a node if it does not exist yet, or error out.
         如果节点尚不存在，请添加节点，否则出错。
         """
         if not graph:
@@ -32,7 +35,10 @@ class DAG(object):
             pass
 
     def delete_node(self, node_name, graph=None):
-        """ Deletes this node and all edges referencing it. """
+        """
+        Deletes this node and all edges referencing it.
+        删除此节点和引用它的所有边
+        """
         if not graph:
             graph = self.graph
         if node_name not in graph:
@@ -53,7 +59,10 @@ class DAG(object):
             pass
 
     def add_edge(self, ind_node, dep_node, graph=None):
-        """ Add an edge (dependency) between the specified nodes. """
+        """
+        Add an edge (dependency) between the specified nodes.
+        在指定节点之间添加边（依赖项）。
+        """
         if not graph:
             graph = self.graph
         if ind_node not in graph or dep_node not in graph:
@@ -68,7 +77,10 @@ class DAG(object):
             raise Exception()
 
     def delete_edge(self, ind_node, dep_node, graph=None):
-        """ Delete an edge from the graph. """
+        """
+        Delete an edge from the graph.
+        从图形中删除边
+        """
         if not graph:
             graph = self.graph
         if dep_node not in graph.get(ind_node, []):
@@ -76,7 +88,10 @@ class DAG(object):
         graph[ind_node].remove(dep_node)
 
     def rename_edges(self, old_task_name, new_task_name, graph=None):
-        """ Change references to a task in existing edges. """
+        """
+        Change references to a task in existing edges.
+        更改对现有边中任务的引用。
+        """
         if not graph:
             graph = self.graph
         for node, edges in graph.items():
@@ -91,13 +106,19 @@ class DAG(object):
                     edges.add(new_task_name)
 
     def predecessors(self, node, graph=None):
-        """ Returns a list of all predecessors of the given node """
+        """
+        Returns a list of all predecessors of the given node
+        返回给定节点的所有前置任务的列表
+        """
         if graph is None:
             graph = self.graph
         return [key for key in graph if node in graph[key]]
 
     def downstream(self, node, graph=None):
-        """ Returns a list of all nodes this node has edges towards. """
+        """
+        Returns a list of all nodes this node has edges towards.
+        返回此节点具有边缘的所有节点的列表。
+        """
         if graph is None:
             graph = self.graph
         if node not in graph:
@@ -105,9 +126,12 @@ class DAG(object):
         return list(graph[node])
 
     def all_downstreams(self, node, graph=None):
-        """Returns a list of all nodes ultimately downstream
+        """
+        Returns a list of all nodes ultimately downstream
         of the given node in the dependency graph, in
-        topological order."""
+        topological order.
+        按拓扑顺序返回依赖项图中给定节点下游的所有节点的列表。
+        """
         if graph is None:
             graph = self.graph
         nodes = [node]
@@ -128,14 +152,19 @@ class DAG(object):
         )
 
     def all_leaves(self, graph=None):
-        """ Return a list of all leaves (nodes with no downstreams) """
+        """
+        Return a list of all leaves (nodes with no downstreams)
+        返回所有叶子（没有下游的节点）的列表
+        """
         if graph is None:
             graph = self.graph
         return [key for key in graph if not graph[key]]
 
     def from_dict(self, graph_dict):
-        """ Reset the graph and build it from the passed dictionary.
+        """
+        Reset the graph and build it from the passed dictionary.
         The dictionary takes the form of {node_name: [directed edges]}
+        重置图形并从传递的字典构建它。字典采用 {node_name： [定向边缘]} 的形式
         """
 
         self.reset_graph()
@@ -150,6 +179,7 @@ class DAG(object):
     def reset_graph(self):
         """
         Restore the graph to an empty state.
+        将图形还原为空状态
         创建一个map
         记录所有节点
         节点表
@@ -157,17 +187,23 @@ class DAG(object):
         self.graph = OrderedDict()
 
     def ind_nodes(self, graph=None):
-        """ Returns a list of all nodes in the graph with no dependencies. """
+        """
+        Returns a list of all nodes in the graph with no dependencies.
+        返回图形中没有依赖项的所有节点的列表。
+        """
         if graph is None:
             graph = self.graph
-        # 将遍历图中节点 
+        # 将遍历图中节点
         dependent_nodes = set(
             node for dependents in graph.values() for node in dependents
         )
         return [node for node in graph.keys() if node not in dependent_nodes]
 
     def validate(self, graph=None):
-        """ Returns (Boolean, message) of whether DAG is valid. """
+        """
+        Returns (Boolean, message) of whether DAG is valid.
+        返回 DAG 是否有效的（布尔值、消息）
+        """
         graph = graph if graph is not None else self.graph
         if len(self.ind_nodes(graph)) == 0:
             return False, 'no independent nodes detected'
@@ -178,8 +214,10 @@ class DAG(object):
         return True, 'valid'
 
     def topological_sort(self, graph=None):
-        """ Returns a topological ordering of the DAG.
+        """
+        Returns a topological ordering of the DAG.
         Raises an error if this is not possible (graph is not valid).
+        返回 DAG 的拓扑顺序。如果无法做到这一点（图形无效），则会引发错误。
         """
         if graph is None:
             graph = self.graph
@@ -193,7 +231,7 @@ class DAG(object):
 
         while ready:
             u = ready.pop()
-            result.append(u)
+            result.append(f'{str(u)}')
             for v in graph[u]:
                 in_degree[v] -= 1
                 if in_degree[v] == 0:
@@ -207,66 +245,21 @@ class DAG(object):
     def size(self):
         return len(self.graph)
 
+    def __repr__(self):
+        return f"DAG(nodes={self.graph.keys()})"
 
-class DAG:
-  def __init__(self, vertices):
-    self.vertices = vertices
-    self.adjacency_list = {}
-    for vertex in vertices:
-      self.adjacency_list[vertex] = []
+    def get_node(self, node_name):
+        """
+        Get a node by name.
+        按名称获取节点。
+        """
+        return self.graph.get(node_name)
 
-  def add_edge(self, u, v):
-    self.adjacency_list[u].append(v)
-
-  def is_cyclic(self):
-    """
-    深度优先搜索，判断图是否有环。
-
-    Args:
-      None
-
-    Returns:
-      True，如果图有环；False，如果图没有环。
-    """
-
-    visited = set()
-
-    def dfs(u):
-      visited.add(u)
-      for v in self.adjacency_list[u]:
-        if v in visited:
-          return True
-        if dfs(v):
-          return True
-      return False
-
-    for vertex in self.vertices:
-      if vertex in visited:
-        continue
-      if dfs(vertex):
-        return True
-    return False
-
-
-def main():
-  vertices = ["A", "B", "C", "D", "E"]
-  dag = DAG(vertices)
-  dag.add_edge("A", "B")
-  dag.add_edge("A", "C")
-  dag.add_edge("B", "D")
-  dag.add_edge("C", "E")
-
-  print(dag.is_cyclic())
-
-if __name__ == '__main__':
-    dag = DAG()
-    dag.add_node("a")
-    dag.add_node("b")
-    dag.add_node("c")
-    dag.add_edge("a", "b")
-    dag.add_edge("b", "c")
-    dag.add_edge("c", "a")
-    print(dag.topological_sort())
-    print(dag.graph)
-    print(dag.all_downstreams("b"))
-
+    def copy(self):
+        """
+        Create a copy of the DAG.
+        创建 DAG 的副本。
+        """
+        new_dag = DAG()
+        new_dag.graph = deepcopy(self.graph)
+        return new_dag
