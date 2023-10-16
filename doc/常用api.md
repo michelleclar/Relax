@@ -2,22 +2,22 @@
 
 |                      | 作用                                                         | 例子                                                         |
 | -------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| screenshot           | 截图                                                         | pyautogui.screenshot([screenshot_path][screenshot_path], region) |
-| click                | 模拟鼠标点击                                                 | pyautogui.click(avg[0], avg[1], button='left')               |
+| screenshot           | 截图                                                         | pyautogui.screenshot([^screenshot_path]screenshot_path, [^region]region) |
+| click                | 模拟鼠标点击                                                 | pyautogui.click(([^point]point), button='left')              |
 | size                 | 获取屏幕宽高                                                 | pyautogui.size()                                             |
-| press                | 模拟键盘输入                                                 | pyautogui.press(key)                                         |
-| getWindowsWithTitle  | 根据窗口标题进行选择，返回一个[^Win32Window]Win32Window对象的集合 | pyautogui.getWindowsWithTitle('title_name')                  |
-| getActiveWindow      | 得到当前鼠标焦点的窗口对象，[Win32Window][Win32Window]       | pyautogui.getActiveWindow（）                                |
+| press                | 模拟键盘输入                                                 | pyautogui.press([^key]key)                                   |
+| getWindowsWithTitle  | 根据窗口标题进行选择，返回一个[^Win32Window]Win32Window对象的集合 | pyautogui.getWindowsWithTitle('[^title_name]title_name')     |
+| getActiveWindow      | 得到当前鼠标焦点的窗口对象，[^Win32Window]Win32Window        | pyautogui.getActiveWindow（）                                |
 | getActiveWindowTitle | 得到当前鼠标焦点的窗口标题                                   | pyautogui.getActiveWindowTitle()                             |
-| getWindowsAt         | 得到在指定坐标的[Win32Window](#Win32Window)对象的集合        | pyautogui.getWindowsAt（point）                              |
+| getWindowsAt         | 得到在指定坐标的[^Win32Window]Win32Window对象的集合          | pyautogui.getWindowsAt（[^point]point）                      |
 | getAllTitles         | 得到所有title                                                | pyautogui.getAllTitles()                                     |
 | getAllWindows        | 得到所有可见Windows                                          | pyautogui.getAllWindows()                                    |
 | cursor               | 得到当前鼠标的坐标                                           | pyautogui.cursor()                                           |
 | resolution           | 获取屏幕宽高                                                 | pyautogui.resolution()                                       |
-| imread               | 读取图片                                                     | cv2.imread(path)                                             |
-| imwrite              | 保存图片                                                     | cv2.imwrite(path, img)                                       |
-| imencode             | 保存图片（解决中文乱码）                                     | cv2.imencode('.png', img)[1].tofile(path)                    |
-| resize               | 调整图片大小                                                 | cv2.resize(img2, (img1.shape[1], img1.shape[0]))             |
+| imread               | 读取图片                                                     | cv2.imread([^path]path)                                      |
+| imwrite              | 保存图片                                                     | cv2.imwrite([^path]path, [^img]img)                          |
+| imencode             | 保存图片（解决中文乱码）                                     | cv2.imencode('.png', img)[1].tofile([^path]path)             |
+| resize               | 调整图片大小                                                 | cv2.resize(img, (img.shape[1], img.shape[0]))                |
 
 
 
@@ -46,8 +46,18 @@
 'command', 'option', 'optionleft', 'optionright']
 ```
 
-[screenshot_path]:
+### OpenCV
 
+|                   | 作用                 | 例子                                                         |
+| ----------------- | -------------------- | ------------------------------------------------------------ |
+| matchTemplate     | 模板匹配             | cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)    |
+| minMaxLoc         | 处理模板匹配结果     | min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)   |
+| rectangle         | 在图片上进行标注     | cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2) |
+| imshow            | 显示图片             | cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target) |
+| waitKey           | 监听键盘             | cv2.waitKey()                                                |
+| destroyAllWindows | 销毁所有imshow的图片 | cv2.destroyAllWindows()                                      |
+
+[^screenshot_path]:截图保存的路径
 [^Win32Window]:uml图
 
 ```mermaid
@@ -74,18 +84,9 @@ class Win32Window {
 }
 ```
 
-### OpenCV
-
-|                   | 作用                 | 例子                                                         |
-| ----------------- | -------------------- | ------------------------------------------------------------ |
-| matchTemplate     | 模板匹配             | cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)    |
-| minMaxLoc         | 处理模板匹配结果     | min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)   |
-| rectangle         | 在图片上进行标注     | cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2) |
-| imshow            | 显示图片             | cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target) |
-| waitKey           | 监听键盘             | cv2.waitKey()                                                |
-| destroyAllWindows | 销毁所有imshow的图片 | cv2.destroyAllWindows()                                      |
-
-
-
-
-
+[^region]:可指定截取区域
+[^point]:x,y坐标
+[^key]:键盘映射
+[^title_name]:win的title名字
+[^path]:路径
+[^img]:nupmy 数组
