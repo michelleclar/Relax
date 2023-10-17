@@ -48,8 +48,7 @@ class InputKeyStrategy(Enum):
     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
     CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
 
-# 共用体 但是只能使用基本类型 现在采用结构体形式
-# class TaskStrategy(Union):
+# 共用体 但是只能使用基本类型 现在采用结构体形式 class TaskStrategy(Union):
 #     _fields_ = [
 #         ("click", c_int),
 #         ("input_key", c_char_p)
