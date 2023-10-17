@@ -6,6 +6,19 @@ from core.base import image, screet, log
 
 logger = log.get_logger()
 class Execute(object):
+    """运行构建器构建的参数"""
+    def execute(self,task: [buildtaskargs,builde]):
+        """根据类型执行不同的执行方式"""
+        task_type = type(task)
+        switch task_type:
+            case buildtaskargs:
+                self.execute_task_args(task)
+            case _:
+                logger.error(f'不支持此类型：{task_type}')
+    def execute_task_args(task: [buildtaskargs]):
+        """正式开始执行"""
+        task
+
     pass
 # 创建一个字典
 # 脚本任务类
