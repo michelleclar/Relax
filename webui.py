@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import gradio as gr
 import numpy as np
 
+
 # Define a function to generate the scatterplot
 def generate_scatterplot(x, y, title="Scatterplot", x_label="X", y_label="Y"):
     N = 100
@@ -24,14 +25,13 @@ def generate_scatterplot(x, y, title="Scatterplot", x_label="X", y_label="Y"):
     # Return the filename of the generated plot
     return plot_filename
 
-# Create a Gradio interface
-if __name__ == '__main__':
 
+# Create a Gradio interface
+if __name__ == "__main__":
     interface = gr.Interface(
         fn=generate_scatterplot,
         inputs=["text", "text", "text", "text"],  # x, y, title, x_label
         outputs="image",
-        live=True
+        live=True,
     )
     interface.launch()
-

@@ -78,9 +78,13 @@ class Build(object):
     """通用构建器"""
     class BuildTaskArgs(object):
         """任务流构建器"""
-        def __init__(self):
+        def __init__(self,win_title:str):
             self.dag = dag.DAG()
-
+            self.win_title = win_title
+        def get_win_title(self):
+            return self.win_title
+        def get_graph(self):
+            return self.dag.graph
         def add_node(self, arg):
             """添加任务节点"""
             try:
@@ -129,10 +133,12 @@ def main():
 
     a3 = ScriptArgs("结算", ClickStrategy.CENTER, MatchRule().template("settle"))
     a4 = ScriptArgs("结束", ClickStrategy.CENTER, MatchRule().template("end"))
-    task = Build().BuildTaskArgs()
+    task = Build().BuildTaskArgs("aaa")
     _dag = (task.add_node(a1).add_node(a2).add_node(a3).add_node(a4)
             .add_edge(a1, a2).add_edge(a1, a3).add_edge(a3, a4))
-    print(_dag.show_dag())
+    for i in _dag.dag.graph.items():
+        print(str(i))
+    # print(_dag.show_dag())
 
 
 if __name__ == '__main__':

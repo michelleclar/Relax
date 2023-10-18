@@ -17,9 +17,17 @@ class Execute(object):
                 logger.error(f'不支持此类型：{task_type}')
     def execute_task_args(task: [buildtaskargs]):
         """正式开始执行"""
-        task
+        screenshot_name = "screenshot" + util.generate_random_string(4)
+        # 进行区域处理
+        task.win_title
+        node = task.get_current_node()
+        graph = task.get_graph()
+        edgs = graph[node]
+        # 截图
+        screet.do_screenshot(screenshot_name,)
 
-    pass
+def get_region_by_title(win_title:str):
+    
 # 创建一个字典
 # 脚本任务类
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中

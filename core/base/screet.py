@@ -48,3 +48,5 @@ def keys(key):
     :return:
     """
     pyautogui.press(key)
+
+def get_region_by_title(win_title:str):
