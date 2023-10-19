@@ -5,7 +5,7 @@ from core.base import image, screet, log
 # 执行方法
 logger = log.get_logger()
 def get_xy(strategy:ClickStrategy,minloc):
-            switch strategy:
+            match strategy:
                 case ClickStrategy.CENTER:
                     #返回中心点
                 case ClickStrategy.RANDOM:
@@ -15,10 +15,10 @@ def get_xy(strategy:ClickStrategy,minloc):
          
 class Execute(object):
     """运行构建器构建的参数"""
-    def execute(self,task: [Build.Buildtaskargs,builde]):
+    def execute(self,task: [Build.Buildtaskargs]):
         """根据类型执行不同的执行方式"""
         task_type = type(task)
-        switch task_type:
+        match task_type:
             case buildtaskargs:
                 self.execute_task_args(task)
             case _:
@@ -38,7 +38,7 @@ class Execute(object):
         
         node = head
         type = type(node.match_rule)
-        switch type:
+        match type:
             case Template:
                 """模板匹配"""
                 rule = node.match_rule
@@ -59,7 +59,7 @@ class Execute(object):
         def get_xy(strategy:ClickStrategy):
             _strategy = strategy.strategy
             point = None
-            switch _strategy:
+            match _strategy:
                 case Strategy.CENTER:
                     #返回中心点
                 case Strategy.RANDOM:
