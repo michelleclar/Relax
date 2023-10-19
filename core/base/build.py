@@ -22,8 +22,8 @@ class Offset(Structure):
                 ("left",c_long)]
     
 class POINT(Structure):
-    _fields_ = [("x", ctypes.c_long),
-                ("y", ctypes.c_long)]
+    _fields_ = [("x", c_long),
+                ("y", c_long)]
 
 
 class MatchRule(object):
@@ -63,7 +63,7 @@ class Strategy(Enum):
 class ClickStrategy(object):
     """点击策略"""
 
-    def __init__(self, strategy: Strategy, offset=None :Offset):
+    def __init__(self, strategy: Strategy, offset=None):
         self.strategy = strategy
         self.offset = offset
 
