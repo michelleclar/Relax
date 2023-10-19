@@ -1,8 +1,8 @@
-"""
-图片的操作
-"""
 import cv2
 import numpy as np
+"""
+图片操作
+"""
 
 
 def do_match(target, template):

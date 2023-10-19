@@ -1,8 +1,8 @@
-from ctypes import Union, c_char_p, c_int
+import log
 from enum import Enum
 from core.struct import dag
-import log
 from collections import namedtuple
+from ctypes import Union, c_char_p, c_int, c_long, Structure
 
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
@@ -15,6 +15,17 @@ logger = log.get_logger()
 # 点击事件名，点击事件
 
 # 脚本运行参数 点击事件名（元组：事件名，枚举值：中心，随即，不点击匹配位置） 匹配规则（单独参数）是否启用防检测机制
+class Offset(Structure):
+    _fields_ = [("up", c_long),
+                ("down", c_long),
+                ("right",c_long),
+                ("left",c_long)]
+    
+class POINT(Structure):
+    _fields_ = [("x", ctypes.c_long),
+                ("y", ctypes.c_long)]
+
+
 class MatchRule(object):
     """
     ocr: 文字
@@ -31,22 +42,30 @@ class MatchRule(object):
         def __str__(self):
             return f'Ocr(text={self.text})'
 
-    def template(self, template_name):
+    def template(self, template_name, ):
         return self.Template(template_name=template_name)
 
     class Template(object):
-        def __init__(self, template_name):
+        def __init__(self, template_name, threshold=None):
             self.template_name = template_name
+            self.threshold = threshold if threshold is not None else 0.9
 
         def __str__(self):
             return f'Template(template_name={self.template_name})'
 
 
-class ClickStrategy(Enum):
-    """点击策略"""
+class Strategy(Enum):
     CENTER = 1  # 点击匹配的图像中心
     RANDOM = 2  # 在匹配区域最近点击
     WITHOUT = 3  # 点击匹配区域之外的地方
+
+
+class ClickStrategy(object):
+    """点击策略"""
+
+    def __init__(self, strategy: Strategy, offset=None :Offset):
+        self.strategy = strategy
+        self.offset = offset
 
 
 class InputKeyStrategy(Enum):
@@ -68,7 +87,9 @@ class ScriptArgs(object):
     _auto_increment_weight = 0
 
     def __init__(self, task_name: any, strategy: [InputKeyStrategy, ClickStrategy],
-                 match_rule: [MatchRule.Ocr, MatchRule.Template], weight=None):
+                 match_rule: [MatchRule.Ocr, MatchRule.Template]
+                 , weight=None):
+
         self.task_name = task_name
         self.match_rule = match_rule
         self.strategy = strategy
@@ -169,13 +190,16 @@ class Build(object):
             except ValueError:
                 logger.error(f'不允许有环流程不正确')
 
+        def get_head(self):
+            return self.nodes[0]
+
 
 def main():
-    a1 = ScriptArgs("开始", ClickStrategy.CENTER, MatchRule().template("action"))
-    a2 = ScriptArgs("失败", ClickStrategy.CENTER, MatchRule().template("failed"))
+    a1 = ScriptArgs("开始", ClickStrategy(Strategy.CENTER), MatchRule().template("action"))
+    a2 = ScriptArgs("失败", ClickStrategy(Strategy.CENTER), MatchRule().template("failed"))
 
-    a3 = ScriptArgs("结算", ClickStrategy.CENTER, MatchRule().template("settle"))
-    a4 = ScriptArgs("结束", ClickStrategy.CENTER, MatchRule().template("end"))
+    a3 = ScriptArgs("结算", ClickStrategy(Strategy.CENTER), MatchRule().template("settle"))
+    a4 = ScriptArgs("结束", ClickStrategy(Strategy.CENTER), MatchRule().template("end"))
     task = Build().BuildTaskArgs("aaa")
     task.add_nodes({a1, a2, a3, a4})
     task.add_edge(a1, a2)

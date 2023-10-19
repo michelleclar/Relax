@@ -60,7 +60,6 @@ class DAG(object):
 
     def add_edge(self, ind_node, dep_node, graph=None):
         """
-        Add an edge (dependency) between the specified nodes.
         在指定节点之间添加边（依赖项）。
         """
         if not graph:
@@ -78,7 +77,6 @@ class DAG(object):
 
     def delete_edge(self, ind_node, dep_node, graph=None):
         """
-        Delete an edge from the graph.
         从图形中删除边
         """
         if not graph:
@@ -89,7 +87,6 @@ class DAG(object):
 
     def rename_edges(self, old_task_name, new_task_name, graph=None):
         """
-        Change references to a task in existing edges.
         更改对现有边中任务的引用。
         """
         if not graph:
@@ -107,7 +104,6 @@ class DAG(object):
 
     def predecessors(self, node, graph=None):
         """
-        Returns a list of all predecessors of the given node
         返回给定节点的所有前置任务的列表
         """
         if graph is None:
@@ -116,7 +112,6 @@ class DAG(object):
 
     def downstream(self, node, graph=None):
         """
-        Returns a list of all nodes this node has edges towards.
         返回此节点具有边缘的所有节点的列表。
         """
         if graph is None:
@@ -127,9 +122,6 @@ class DAG(object):
 
     def all_downstreams(self, node, graph=None):
         """
-        Returns a list of all nodes ultimately downstream
-        of the given node in the dependency graph, in
-        topological order.
         按拓扑顺序返回依赖项图中给定节点下游的所有节点的列表。
         """
         if graph is None:
@@ -153,7 +145,6 @@ class DAG(object):
 
     def all_leaves(self, graph=None):
         """
-        Return a list of all leaves (nodes with no downstreams)
         返回所有叶子（没有下游的节点）的列表
         """
         if graph is None:
@@ -162,8 +153,6 @@ class DAG(object):
 
     def from_dict(self, graph_dict):
         """
-        Reset the graph and build it from the passed dictionary.
-        The dictionary takes the form of {node_name: [directed edges]}
         重置图形并从传递的字典构建它。字典采用 {node_name： [定向边缘]} 的形式
         """
 
@@ -178,7 +167,6 @@ class DAG(object):
 
     def reset_graph(self):
         """
-        Restore the graph to an empty state.
         将图形还原为空状态
         创建一个map
         记录所有节点
@@ -188,7 +176,6 @@ class DAG(object):
 
     def ind_nodes(self, graph=None):
         """
-        Returns a list of all nodes in the graph with no dependencies.
         返回图形中没有依赖项的所有节点的列表。
         """
         if graph is None:
@@ -201,7 +188,6 @@ class DAG(object):
 
     def validate(self, graph=None):
         """
-        Returns (Boolean, message) of whether DAG is valid.
         返回 DAG 是否有效的（布尔值、消息）
         """
         graph = graph if graph is not None else self.graph
@@ -215,8 +201,6 @@ class DAG(object):
 
     def topological_sort(self, graph=None):
         """
-        Returns a topological ordering of the DAG.
-        Raises an error if this is not possible (graph is not valid).
         返回 DAG 的拓扑顺序。如果无法做到这一点（图形无效），则会引发错误。
         """
         if graph is None:
@@ -250,14 +234,12 @@ class DAG(object):
 
     def get_node(self, node_name):
         """
-        Get a node by name.
         按名称获取节点。
         """
         return self.graph.get(node_name)
 
     def copy(self):
         """
-        Create a copy of the DAG.
         创建 DAG 的副本。
         """
         new_dag = DAG()

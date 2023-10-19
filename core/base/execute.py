@@ -1,13 +1,21 @@
-from build import Build
+from build import Build,ClickStrategy
 from commons import img_name, exception
 from utils import util, format
 from core.base import image, screet, log
 # 执行方法
-
 logger = log.get_logger()
+def get_xy(strategy:ClickStrategy,minloc):
+            switch strategy:
+                case ClickStrategy.CENTER:
+                    #返回中心点
+                case ClickStrategy.RANDOM:
+                    #随即点
+                case ClickStrategy.WITHOUT:
+                    #匹配之外的点
+         
 class Execute(object):
     """运行构建器构建的参数"""
-    def execute(self,task: [buildtaskargs,builde]):
+    def execute(self,task: [Build.Buildtaskargs,builde]):
         """根据类型执行不同的执行方式"""
         task_type = type(task)
         switch task_type:
@@ -15,18 +23,54 @@ class Execute(object):
                 self.execute_task_args(task)
             case _:
                 logger.error(f'不支持此类型：{task_type}')
-    def execute_task_args(task: [buildtaskargs]):
+    def execute_task_args(self,task : Build.BuildTaskArgs):
         """正式开始执行"""
         screenshot_name = "screenshot" + util.generate_random_string(4)
         # 进行区域处理
-        task.win_title
-        node = task.get_current_node()
-        graph = task.get_graph()
-        edgs = graph[node]
+        region = screet.get_region_by_title(task.win_title)
         # 截图
-        screet.do_screenshot(screenshot_name,)
+        screet.do_screenshot(screenshot_name,region)
+        head = task.get_head() 
+        imgs = set() 
+        graph = task.get_graph()
+        scrreenshot = image.cv2_imread(f"../imgs/screenshot/{screenshot_name}.png")
+        
+        
+        node = head
+        type = type(node.match_rule)
+        switch type:
+            case Template:
+                """模板匹配"""
+                rule = node.match_rule
+                template =  image.cv2_imread(f"../imgs/{rule.template_name}.png")
+                threshold , minloc = image.do_match(scrreenshot,template)
+                if threshold > rule.threshold:
+                    # 匹配成功
+                    point = get_xy(node.strategy,minloc)
+                    click(point)
+                else :
+                    # 匹配失败
+                
+            case Ocr:
+                # Ocr
+                
+                """ocr"""
+        
+        def get_xy(strategy:ClickStrategy):
+            _strategy = strategy.strategy
+            point = None
+            switch _strategy:
+                case Strategy.CENTER:
+                    #返回中心点
+                case Strategy.RANDOM:
+                    #随即点
+                case Strategy.WITHOUT:
+                    #匹配之外的点
+            # TODO 进行随机点偏移
+            strategy.offset
 
-def get_region_by_title(win_title:str):
+
+                    
     
 # 创建一个字典
 # 脚本任务类
