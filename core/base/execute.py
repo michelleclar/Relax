@@ -1,7 +1,8 @@
-from build import Build,ClickStrategy,Strategy,MatchRule
+from build import Build, ClickStrategy, Strategy, MatchRule
 from commons import img_name, exception
 from utils import util, format
 from core.base import image, screet, log
+
 # 执行方法
 logger = log.get_logger()
 
@@ -14,19 +15,23 @@ def get_xy(strategy: ClickStrategy):
             pass
         # 返回中心点
         case Strategy.RANDOM:
-        # 随即点
+            # 随即点
             pass
         case Strategy.WITHOUT:
-        # 匹配之外的点
+            # 匹配之外的点
             pass
     # TODO 进行随机点偏移
     strategy.offset
 
+
 def click():
     pass
+
+
 class Execute(object):
     """运行构建器构建的参数"""
-    def execute(self,task: [Build.BuildTaskArgs]):
+
+    def execute(self, task: [Build.BuildTaskArgs]):
         """根据类型执行不同的执行方式"""
         task_type = type(task)
         match task_type:
@@ -34,18 +39,18 @@ class Execute(object):
                 self.execute_task_args(task)
             case _:
                 logger.error(f'不支持此类型：{task_type}')
-    def execute_task_args(self,task : Build.BuildTaskArgs):
+
+    def execute_task_args(self, task: Build.BuildTaskArgs):
         """正式开始执行"""
         screenshot_name = "screenshot" + util.generate_random_string(4)
         # 进行区域处理
         region = screet.get_region_by_title(task.win_title)
         # 截图
-        screet.do_screenshot(screenshot_name,region)
+        screet.do_screenshot(screenshot_name, region)
         head = task.get_head()
         imgs = set()
         graph = task.get_graph()
         scrreenshot = image.cv2_imread(f"../imgs/screenshot/{screenshot_name}.png")
-
 
         node = head
         type = type(node.match_rule)
@@ -53,13 +58,13 @@ class Execute(object):
             case MatchRule.Template:
                 """模板匹配"""
                 rule = node.match_rule
-                template =  image.cv2_imread(f"../imgs/{rule.template_name}.png")
-                threshold , minloc = image.do_match(scrreenshot,template)
+                template = image.cv2_imread(f"../imgs/{rule.template_name}.png")
+                threshold, minloc = image.do_match(scrreenshot, template)
                 if threshold > rule.threshold:
                     # 匹配成功
-                    point = get_xy(node.strategy,minloc)
+                    point = get_xy(node.strategy, minloc)
                     click(point)
-                else :
+                else:
                     # 匹配失败
                     pass
 
@@ -67,8 +72,6 @@ class Execute(object):
                 # Ocr
 
                 """ocr"""
-
-
 
 
 # 创建一个字典
@@ -163,7 +166,7 @@ class ScriptTask:
 
     def do_screenshot(self):
         path = f"../imgs/screenshot/{self.screenshot_name}.png"
-        screet.do_screenshot(path,self.region)
+        screet.do_screenshot(path, self.region)
         return image.cv2_imread(path)
 
     def do_match(self, template):
@@ -236,6 +239,7 @@ class ScriptTask:
             logger.debug(f"时间优化间隔:{times}")
             max_duration = max(times) + 1
 
+
 def main():
     region1 = (6, 36, 830, 463)
     region2 = (870, 36, 830, 454)
@@ -252,6 +256,7 @@ def main():
     util.task_pool((ScriptTask(args).set_region(region1).run, count), (ScriptTask(args).set_region(region2).run, count))
     # util.task_pool((ScriptTask(args).set_region(region1).run, count))
     # util.task_pool((ScriptTask(args).set_region(region2).run, 800))
+
 
 if __name__ == '__main__':
     main()
