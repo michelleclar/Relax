@@ -7,6 +7,8 @@ from collections import namedtuple
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
 logger = log.get_logger()
+
+
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中
 # 整体参数结构设计
 # 匹配规则   枚举值，ocr匹配:需要有匹配的文字参数 模板匹配:需要模板图片名字
@@ -18,16 +20,20 @@ class MatchRule(object):
     ocr: 文字
     template: 图片名
     """
+
     def ocr(self, text):
         return self.Ocr(text=text)
+
     class Ocr(object):
         def __init__(self, text):
             self.text = text
 
         def __str__(self):
             return f'Ocr(text={self.text})'
+
     def template(self, template_name):
         return self.Template(template_name=template_name)
+
     class Template(object):
         def __init__(self, template_name):
             self.template_name = template_name
@@ -38,9 +44,10 @@ class MatchRule(object):
 
 class ClickStrategy(Enum):
     """点击策略"""
-    CENTER = 1 # 点击匹配的图像中心
-    RANDOM = 2 # 在匹配区域最近点击
-    WITHOUT = 3 # 点击匹配区域之外的地方
+    CENTER = 1  # 点击匹配的图像中心
+    RANDOM = 2  # 在匹配区域最近点击
+    WITHOUT = 3  # 点击匹配区域之外的地方
+
 
 class InputKeyStrategy(Enum):
     """按键操作策略"""
@@ -48,8 +55,9 @@ class InputKeyStrategy(Enum):
     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
     CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
 
-# 共用体 但是只能使用基本类型 现在采用结构体形式 
-#class TaskStrategy(Union):
+
+# 共用体 但是只能使用基本类型 现在采用结构体形式
+# class TaskStrategy(Union):
 #     _fields_ = [
 #         ("click", c_int),
 #         ("input_key", c_char_p)
@@ -57,12 +65,19 @@ class InputKeyStrategy(Enum):
 
 class ScriptArgs(object):
     """节点参数"""
+    _auto_increment_weight = 0
+
     def __init__(self, task_name: any, strategy: [InputKeyStrategy, ClickStrategy],
-                 match_rule: [MatchRule.Ocr, MatchRule.Template],weight=0):
+                 match_rule: [MatchRule.Ocr, MatchRule.Template], weight=None):
         self.task_name = task_name
         self.match_rule = match_rule
         self.strategy = strategy
-        self.weight = weight
+        if weight is not None:
+            self.weight = weight
+        else:
+            # 自增weight，并将其分配给实例
+            ScriptArgs._auto_increment_weight += 1
+            self.weight = ScriptArgs._auto_increment_weight
 
     def __eq__(self, other):
         if not isinstance(other, ScriptArgs):
@@ -78,22 +93,27 @@ class ScriptArgs(object):
 
 class Build(object):
     """通用构建器"""
+
     class BuildTaskArgs(object):
         """任务流构建器"""
-        def __init__(self,win_title:str):
+
+        def __init__(self, win_title: str):
             self.dag = dag.DAG()
             self.win_title = win_title
             self.nodes = set()
             self.edges = set()
+
         def get_win_title(self):
             return self.win_title
+
         def get_graph(self):
             return self.dag.graph
+
         def add_nodes(self, *arg: set[ScriptArgs]):
             """添加任务节点"""
             try:
                 # 将后续节点添加到集合末尾
-                self.nodes.update(*arg) 
+                self.nodes.update(*arg)
             except TypeError:
                 logger.error(f'不能重复添加节点')
             return self
@@ -106,13 +126,13 @@ class Build(object):
                     if edge not in self.edges:
                         self.edges.add(edge)
                 else:
-                    logger.warning(f"添加关系时，{inde_node}或{dep_node}节点不存在")
+                    logger.warning(f"添加关系时，{ind_node}或{dep_node}节点不存在")
             except TypeError as t:
                 logger.error(f"键重复，{t}")
             except Exception as e:
                 logger.error(f"{log.detail_error()}")
             return self
-        
+
         def build(self):
             self.sort()
             for node in self.nodes:
@@ -122,10 +142,10 @@ class Build(object):
                     self.dag.add_edge(*edge)
                 except Exception as e:
                     logger.error(f"{log.detail_error()}")
-         
+
         def sort(self):
             self.nodes = sorted(self.nodes, key=lambda ScriptArgs: ScriptArgs.weight)
-            
+
         def delete_edge(self, ind_node, dep_node):
             """删除边"""
             try:
@@ -157,10 +177,10 @@ def main():
     a3 = ScriptArgs("结算", ClickStrategy.CENTER, MatchRule().template("settle"))
     a4 = ScriptArgs("结束", ClickStrategy.CENTER, MatchRule().template("end"))
     task = Build().BuildTaskArgs("aaa")
-    task.add_nodes({a1,a2,a3,a4})
-    task.add_edge(a1,a2)
-    task.add_edge(a1,a3)
-    task.add_edge(a3,a4)
+    task.add_nodes({a1, a2, a3, a4})
+    task.add_edge(a1, a2)
+    task.add_edge(a1, a3)
+    task.add_edge(a3, a4)
     task.build()
     # _dag = (task.add_node(a1).add_node(a2).add_node(a3).add_node(a4)
     #         .add_edge(a1, a2).add_edge(a1, a3).add_edge(a3, a4))
