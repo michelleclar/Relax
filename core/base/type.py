@@ -1,6 +1,6 @@
 from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
-
+from ctypes import c_long, Structure
 """
 orderedDict 可以记住键的插入顺序的字典 （map + linked）
 """
@@ -245,3 +245,21 @@ class DAG(object):
         new_dag = DAG()
         new_dag.graph = deepcopy(self.graph)
         return new_dag
+    
+class OFFSET(Structure):
+    _fields_ = [("up", c_long),
+                ("down", c_long),
+                ("right",c_long),
+                ("left",c_long)]
+    
+class POINT(Structure):
+    _fields_ = [("x", c_long),
+                ("y", c_long)]
+
+
+# 共用体 但是只能使用基本类型 现在采用结构体形式
+# class TaskStrategy(Union):
+#     _fields_ = [
+#         ("click", c_int),
+#         ("input_key", c_char_p)
+#     ]

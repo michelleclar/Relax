@@ -2,7 +2,10 @@ import os
 import glob
 import time as t
 import numpy as np
+import pyautogui
 from concurrent.futures import ThreadPoolExecutor, wait
+from core.base.build import Build, ClickStrategy, Strategy, MatchRule
+from core.base.type import POINT, OFFSET
 
 
 # 生成随机字符串
@@ -14,13 +17,36 @@ def generate_random_string(length=8):
     return random_string
 
 
+def click(point: POINT, button: str):
+    pyautogui.click(point.x, point.y, button=button)
+
+
 # 得到中点坐标
+def get_xy(strategy: ClickStrategy, min_loc, box):
+    _strategy = strategy.strategy
+    point = POINT()
+    match _strategy:
+        case Strategy.CENTER:
+            res = get_cent_xy(min_loc, box)
+            point = POINT(x=res[0], y=res[1])
+        case Strategy.RANDOM:
+            res = get_random_xy(min_loc, box)
+            point = POINT(x=res[0], y=res[1])
+        case Strategy.WITHOUT:
+            # 匹配之外的点
+            pass
+    # TODO 进行随机点偏移
+    point.x += strategy.offset.x
+    point.y += strategy.offset.y
+    return point
+
+
 def get_cent_xy(avg, box):
     height, width = box
     lower_right = (avg[0] + width, avg[1] + height)
-    return [
-        (int((avg[0] + lower_right[0]) / 2)),
-        (int((avg[1] + lower_right[1]) / 2))]
+    x = (int((avg[0] + lower_right[0]) / 2))
+    y = (int((avg[1] + lower_right[1]) / 2))
+    return POINT(x=x, y=y)
 
 
 def get_random_xy(avg, box):
@@ -29,7 +55,7 @@ def get_random_xy(avg, box):
     x, y = avg
     x += random.uniform(0, height)
     y += random.uniform(0, width)
-    return [x, y]
+    return POINT(x=x, y=y)
 
 
 # time

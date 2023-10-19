@@ -1,8 +1,7 @@
 import log
 from enum import Enum
-from core.struct import dag
+from type import DAG,OFFSET,POINT
 from collections import namedtuple
-from ctypes import Union, c_char_p, c_int, c_long, Structure
 
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
@@ -15,17 +14,6 @@ logger = log.get_logger()
 # 点击事件名，点击事件
 
 # 脚本运行参数 点击事件名（元组：事件名，枚举值：中心，随即，不点击匹配位置） 匹配规则（单独参数）是否启用防检测机制
-class Offset(Structure):
-    _fields_ = [("up", c_long),
-                ("down", c_long),
-                ("right",c_long),
-                ("left",c_long)]
-    
-class POINT(Structure):
-    _fields_ = [("x", c_long),
-                ("y", c_long)]
-
-
 class MatchRule(object):
     """
     ocr: 文字
@@ -42,7 +30,7 @@ class MatchRule(object):
         def __str__(self):
             return f'Ocr(text={self.text})'
 
-    def template(self, template_name, ):
+    def template(self, template_name):
         return self.Template(template_name=template_name)
 
     class Template(object):
@@ -59,13 +47,18 @@ class Strategy(Enum):
     RANDOM = 2  # 在匹配区域最近点击
     WITHOUT = 3  # 点击匹配区域之外的地方
 
-
+class Button(Enum):
+    LEFT = "left"
+    MIDDLE = "middle"
+    RIGHT = "right"
+    PRIMARY = "primary"
+    SECONDARY = "secondary"
 class ClickStrategy(object):
     """点击策略"""
-
-    def __init__(self, strategy: Strategy, offset=None):
+    def __init__(self, strategy: Strategy, offset: OFFSET,button=Button.LEFT):
         self.strategy = strategy
         self.offset = offset
+        self.button = button
 
 
 class InputKeyStrategy(Enum):
@@ -73,14 +66,6 @@ class InputKeyStrategy(Enum):
     CLICK_CENTER_MATCH_POSITION = 'click_center_match_position'
     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
     CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
-
-
-# 共用体 但是只能使用基本类型 现在采用结构体形式
-# class TaskStrategy(Union):
-#     _fields_ = [
-#         ("click", c_int),
-#         ("input_key", c_char_p)
-#     ]
 
 class ScriptArgs(object):
     """节点参数"""
@@ -114,12 +99,10 @@ class ScriptArgs(object):
 
 class Build(object):
     """通用构建器"""
-
     class BuildTaskArgs(object):
         """任务流构建器"""
-
         def __init__(self, win_title: str):
-            self.dag = dag.DAG()
+            self.dag = DAG()
             self.win_title = win_title
             self.nodes = set()
             self.edges = set()
@@ -195,20 +178,20 @@ class Build(object):
 
 
 def main():
-    a1 = ScriptArgs("开始", ClickStrategy(Strategy.CENTER), MatchRule().template("action"))
-    a2 = ScriptArgs("失败", ClickStrategy(Strategy.CENTER), MatchRule().template("failed"))
-
-    a3 = ScriptArgs("结算", ClickStrategy(Strategy.CENTER), MatchRule().template("settle"))
-    a4 = ScriptArgs("结束", ClickStrategy(Strategy.CENTER), MatchRule().template("end"))
-    task = Build().BuildTaskArgs("aaa")
-    task.add_nodes({a1, a2, a3, a4})
-    task.add_edge(a1, a2)
-    task.add_edge(a1, a3)
-    task.add_edge(a3, a4)
-    task.build()
-    # _dag = (task.add_node(a1).add_node(a2).add_node(a3).add_node(a4)
-    #         .add_edge(a1, a2).add_edge(a1, a3).add_edge(a3, a4))
-    print(task)
+    button = Button.LEFT.value
+    print(type(button))
+    # a1 = ScriptArgs("开始", ClickStrategy(Strategy.CENTER), MatchRule().template("action"))
+    # a2 = ScriptArgs("失败", ClickStrategy(Strategy.CENTER), MatchRule().template("failed"))
+    #
+    # a3 = ScriptArgs("结算", ClickStrategy(Strategy.CENTER), MatchRule().template("settle"))
+    # a4 = ScriptArgs("结束", ClickStrategy(Strategy.CENTER), MatchRule().template("end"))
+    # task = Build().BuildTaskArgs("aaa")
+    # task.add_nodes({a1, a2, a3, a4})
+    # task.add_edge(a1, a2)
+    # task.add_edge(a1, a3)
+    # task.add_edge(a3, a4)
+    # task.build()
+    # print(task)
 
 
 if __name__ == '__main__':
