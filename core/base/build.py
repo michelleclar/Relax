@@ -2,6 +2,9 @@ from ctypes import Union, c_char_p, c_int
 from enum import Enum
 from core.struct import dag
 import log
+from collections import namedtuple
+
+Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
 logger = log.get_logger()
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中
@@ -35,9 +38,6 @@ class MatchRule(object):
 
 class ClickStrategy(Enum):
     """点击策略"""
-    # CLICK_CENTER_MATCH_POSITION = 1
-    # CLICK_RANDOM_MATCH_POSITION = 2
-    # CLICK_WITHOUT_MATCH_POSITION = 3
     CENTER = 1 # 点击匹配的图像中心
     RANDOM = 2 # 在匹配区域最近点击
     WITHOUT = 3 # 点击匹配区域之外的地方
@@ -48,7 +48,8 @@ class InputKeyStrategy(Enum):
     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
     CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
 
-# 共用体 但是只能使用基本类型 现在采用结构体形式 class TaskStrategy(Union):
+# 共用体 但是只能使用基本类型 现在采用结构体形式 
+#class TaskStrategy(Union):
 #     _fields_ = [
 #         ("click", c_int),
 #         ("input_key", c_char_p)
@@ -57,10 +58,11 @@ class InputKeyStrategy(Enum):
 class ScriptArgs(object):
     """节点参数"""
     def __init__(self, task_name: any, strategy: [InputKeyStrategy, ClickStrategy],
-                 match_rule: [MatchRule.Ocr, MatchRule.Template]):
+                 match_rule: [MatchRule.Ocr, MatchRule.Template],weight=0):
         self.task_name = task_name
         self.match_rule = match_rule
         self.strategy = strategy
+        self.weight = weight
 
     def __eq__(self, other):
         if not isinstance(other, ScriptArgs):
@@ -81,28 +83,49 @@ class Build(object):
         def __init__(self,win_title:str):
             self.dag = dag.DAG()
             self.win_title = win_title
+            self.nodes = set()
+            self.edges = set()
         def get_win_title(self):
             return self.win_title
         def get_graph(self):
             return self.dag.graph
-        def add_node(self, arg):
+        def add_nodes(self, *arg: set[ScriptArgs]):
             """添加任务节点"""
             try:
-                self.dag.add_node(arg)
-            except KeyError:
+                # 将后续节点添加到集合末尾
+                self.nodes.update(*arg) 
+            except TypeError:
                 logger.error(f'不能重复添加节点')
             return self
 
-        def add_edge(self, ind_node, dep_node):
+        def add_edge(self, ind_node: ScriptArgs, dep_node: ScriptArgs):
             """在任务节点添加边 因为底层数据结构采用dag,所有只能往下运行"""
             try:
-                self.dag.add_edge(ind_node, dep_node)
-            except KeyError:
-                logger.error(f'图形中不存在一个或多个节点')
-            except Exception:
-                logger.error(f'{log.detail_error()}')
+                if ind_node in self.nodes and dep_node in self.nodes:
+                    edge = Edge(ind_node, dep_node)
+                    if edge not in self.edges:
+                        self.edges.add(edge)
+                else:
+                    logger.warning(f"添加关系时，{inde_node}或{dep_node}节点不存在")
+            except TypeError as t:
+                logger.error(f"键重复，{t}")
+            except Exception as e:
+                logger.error(f"{log.detail_error()}")
             return self
-
+        
+        def build(self):
+            self.sort()
+            for node in self.nodes:
+                self.dag.add_node(node)
+            for edge in self.edges:
+                try:
+                    self.dag.add_edge(*edge)
+                except Exception as e:
+                    logger.error(f"{log.detail_error()}")
+         
+        def sort(self):
+            self.nodes = sorted(self.nodes, key=lambda ScriptArgs: ScriptArgs.weight)
+            
         def delete_edge(self, ind_node, dep_node):
             """删除边"""
             try:
@@ -134,11 +157,14 @@ def main():
     a3 = ScriptArgs("结算", ClickStrategy.CENTER, MatchRule().template("settle"))
     a4 = ScriptArgs("结束", ClickStrategy.CENTER, MatchRule().template("end"))
     task = Build().BuildTaskArgs("aaa")
-    _dag = (task.add_node(a1).add_node(a2).add_node(a3).add_node(a4)
-            .add_edge(a1, a2).add_edge(a1, a3).add_edge(a3, a4))
-    for i in _dag.dag.graph.items():
-        print(str(i))
-    # print(_dag.show_dag())
+    task.add_nodes({a1,a2,a3,a4})
+    task.add_edge(a1,a2)
+    task.add_edge(a1,a3)
+    task.add_edge(a3,a4)
+    task.build()
+    # _dag = (task.add_node(a1).add_node(a2).add_node(a3).add_node(a4)
+    #         .add_edge(a1, a2).add_edge(a1, a3).add_edge(a3, a4))
+    print(task)
 
 
 if __name__ == '__main__':
