@@ -4,9 +4,34 @@ import time as t
 import numpy as np
 import pyautogui
 from concurrent.futures import ThreadPoolExecutor, wait
-from core.base.build import Build, ClickStrategy, Strategy, MatchRule
+from core.base.build import Build, ClickStrategy, Strategy, MatchRule , ScriptArgs
 from core.base.type import POINT, OFFSET
 
+# 具体执行逻辑
+def do_execute(node:ScriptArgs,scrreenshot):
+    
+    type = type(node.match_rule)
+        match type:
+            case MatchRule.Template:
+                """模板匹配"""
+                rule = node.match_rule
+                template = image.cache_imread(f"../imgs/{rule.template_name}.png")
+                
+                threshold, min_loc = image.do_match(scrreenshot, template)
+                if threshold > rule.threshold:
+                    # 匹配成功
+                    height, width = template.shape[:2]
+                    point = util.get_xy(node.strategy, min_loc, [height, width])
+                    util.click(point, node.button.value)
+                    util.sleep(1)
+                else:
+                    # 匹配失败 retry
+                    pass
+
+            case MatchRule.Ocr:
+                # Ocr
+                pass
+                """ocr"""
 
 # 生成随机字符串
 def generate_random_string(length=8):

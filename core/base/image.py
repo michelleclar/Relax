@@ -3,8 +3,8 @@ import numpy as np
 """
 图片操作
 """
-
-
+# cache 
+imgs = {}
 def do_match(target, template):
     """
     模板匹配
@@ -39,8 +39,7 @@ def match_debug(target, result, box):
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-
-def cv2_imread(path):
+def cache_imread(path):
     """
     读取图片
     :param path:
@@ -48,7 +47,20 @@ def cv2_imread(path):
     cv2.imread 返回值是 一个RGB NumPy
     三维数组，其中第一维表示像素的行数，第二维表示像素的列数，第三维表示像素的通道数
     """
-    return cv2.imread(path)
+    if imgs[path] is None:
+        imgs[path] = cv2.cv2_imread(path)
+    return imgs[path]
+
+
+def imread(path):
+    """
+    读取图片
+    :param path:
+    :return:
+    cv2.imread 返回值是 一个RGB NumPy
+    三维数组，其中第一维表示像素的行数，第二维表示像素的列数，第三维表示像素的通道数
+    """
+    return cv2.cv2_imread(path)
 
 
 # 保存图片
