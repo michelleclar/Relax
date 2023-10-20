@@ -1,7 +1,7 @@
 import yaml
 
 execute_consts = {}
-
+switch_consts = {}
 
 def init():
     execute()
@@ -15,6 +15,8 @@ def execute():
         ayml = yaml.load(f.read(), Loader=yaml.Loader)
         global execute_consts
         execute_consts = ayml["execute"]
+        global switch_consts
+        switch_consts = ayml["switch"]
     logger.info(f'配置内容为{ayml}')
 # import yaml
 

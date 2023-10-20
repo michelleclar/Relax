@@ -89,4 +89,4 @@ class Win32Window {
 [^key]:键盘映射
 [^title_name]:win的title名字
 [^path]:路径
-[^img]:nupmy 数组
+[^img]:nupmy 数组numpy.ndarray

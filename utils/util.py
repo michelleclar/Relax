@@ -3,35 +3,42 @@ import glob
 import time as t
 import numpy as np
 import pyautogui
+import cv2
+from core.base import image, screet
 from concurrent.futures import ThreadPoolExecutor, wait
-from core.base.build import Build, ClickStrategy, Strategy, MatchRule , ScriptArgs
-from core.base.type import POINT, OFFSET
+from core.base.build import Build, ClickStrategy, InputKeyStrategy, Strategy, MatchRule, ScriptArgs
+from core.base.structs import POINT
+
 
 # 具体执行逻辑
-def do_execute(node:ScriptArgs,scrreenshot):
-    
-    type = type(node.match_rule)
-        match type:
-            case MatchRule.Template:
-                """模板匹配"""
-                rule = node.match_rule
-                template = image.cache_imread(f"../imgs/{rule.template_name}.png")
-                
-                threshold, min_loc = image.do_match(scrreenshot, template)
-                if threshold > rule.threshold:
-                    # 匹配成功
-                    height, width = template.shape[:2]
-                    point = util.get_xy(node.strategy, min_loc, [height, width])
-                    util.click(point, node.button.value)
-                    util.sleep(1)
-                else:
-                    # 匹配失败 retry
-                    pass
+def do_execute(node: ScriptArgs, screenshot):
+    rule = type(node.match_rule)
+    match rule:
+        case MatchRule.Template:
+            """模板匹配"""
+            rule = node.match_rule
+            template = image.cache_imread(f"../imgs/{rule.template_name}.png")
 
-            case MatchRule.Ocr:
-                # Ocr
+            threshold, min_loc = image.do_match(screenshot, template)
+            if threshold > rule.threshold:
+                # 匹配成功
+                height, width = template.shape[:2]
+                strategy = type(node.strategy)
+                match strategy:
+                    case type(ClickStrategy):
+                        point = get_xy(node.strategy, min_loc, [height, width])
+                        click(point, node.strategy.button)
+                    case type(InputKeyStrategy):
+                        send_keys()
+            else:
+                # 匹配失败 retry
                 pass
-                """ocr"""
+
+        case MatchRule.Ocr:
+            # Ocr
+            pass
+            """ocr"""
+
 
 # 生成随机字符串
 def generate_random_string(length=8):
@@ -65,6 +72,8 @@ def get_xy(strategy: ClickStrategy, min_loc, box):
     point.y += strategy.offset.y
     return point
 
+def send_keys():
+    pass
 
 def get_cent_xy(avg, box):
     height, width = box

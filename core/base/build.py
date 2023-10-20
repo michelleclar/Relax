@@ -1,6 +1,6 @@
 import log
 from enum import Enum
-from type import DAG,OFFSET,POINT
+from structs import DAG,OFFSET,POINT
 from collections import namedtuple
 
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
@@ -19,9 +19,10 @@ class MatchRule(object):
     ocr: 文字
     template: 图片名
     """
-
     def ocr(self, text):
         return self.Ocr(text=text)
+    def template(self, template_name):
+        return self.Template(template_name=template_name)
 
     class Ocr(object):
         def __init__(self, text):
@@ -30,9 +31,6 @@ class MatchRule(object):
         def __str__(self):
             return f'Ocr(text={self.text})'
 
-    def template(self, template_name):
-        return self.Template(template_name=template_name)
-
     class Template(object):
         def __init__(self, template_name, threshold=None):
             self.template_name = template_name
@@ -40,6 +38,7 @@ class MatchRule(object):
 
         def __str__(self):
             return f'Template(template_name={self.template_name})'
+
 
 
 class Strategy(Enum):
@@ -61,7 +60,7 @@ class ClickStrategy(object):
         self.button = button
 
 
-class InputKeyStrategy(Enum):
+class InputKeyStrategy(object):
     """按键操作策略"""
     CLICK_CENTER_MATCH_POSITION = 'click_center_match_position'
     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
@@ -98,8 +97,14 @@ class ScriptArgs(object):
 
 
 class Build(object):
+    def __init__(self):
+        pass
+
     """通用构建器"""
-    class BuildTaskArgs(object):
+    def BuildTaskArgs(self,win_title: str):
+        return BuildTaskArgs(win_title=win_title) 
+
+class BuildTaskArgs(object):
         """任务流构建器"""
         def __init__(self, win_title: str):
             self.dag = DAG()
@@ -175,8 +180,6 @@ class Build(object):
 
         def get_head(self):
             return self.nodes[0]
-
-
 def main():
     button = Button.LEFT.value
     print(type(button))
