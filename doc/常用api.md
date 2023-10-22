@@ -90,3 +90,18 @@ class Win32Window {
 [^title_name]:win的title名字
 [^path]:路径
 [^img]:nupmy 数组numpy.ndarray
+```shell
+Usage: mprof <command> <options> <arguments>
+
+Available commands:
+
+    run      运行给定的命令或 python 文件
+    rm       删除 mprof 生成的给定文件
+    clean    清除当前目录中 mprof 创建的文件
+    list     显示带索引的现有配置文件
+    plot     可以将 mprof run 的结果生成图片
+
+Type mprof <command> --help for usage help on a specific command.
+For example, mprof plot --help will list all plotting options.
+
+```

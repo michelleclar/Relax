@@ -1,9 +1,13 @@
 from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
 from ctypes import c_long, Structure
+from commons.exception import STACK_EXCEPTION, QUEUE_EXCEPTION
+
 """
 orderedDict 可以记住键的插入顺序的字典 （map + linked）
 """
+
+
 class DAG(object):
     """
     有向无环图实现。
@@ -104,7 +108,7 @@ class DAG(object):
 
     def predecessors(self, node, graph=None):
         """
-        返回给定节点的所有前置任务的列表
+        返回给定节点的所有前置任务的列表(上一步)
         """
         if graph is None:
             graph = self.graph
@@ -113,6 +117,7 @@ class DAG(object):
     def downstream(self, node, graph=None):
         """
         返回此节点具有边缘的所有节点的列表。
+        可以到达的节点（下一步）
         """
         if graph is None:
             graph = self.graph
@@ -123,6 +128,7 @@ class DAG(object):
     def all_downstreams(self, node, graph=None):
         """
         按拓扑顺序返回依赖项图中给定节点下游的所有节点的列表。
+        该节点所有可到达的节点
         """
         if graph is None:
             graph = self.graph
@@ -245,17 +251,96 @@ class DAG(object):
         new_dag = DAG()
         new_dag.graph = deepcopy(self.graph)
         return new_dag
-    
+
+
 class OFFSET(Structure):
-    _fields_ = [("up", c_long),
-                ("down", c_long),
-                ("right",c_long),
-                ("left",c_long)]
-    
+    _fields_ = [("x", c_long),
+                ("y", c_long)]
+
+
 class POINT(Structure):
     _fields_ = [("x", c_long),
                 ("y", c_long)]
 
+
+class Stack(object):
+    def __init__(self, size=10):
+        self.S = []
+        self.size = size  # 栈大小
+        self.top = -1  # 栈顶位置
+
+    def setSize(self, size):
+        # 设置栈的大小
+        self.size = size
+
+    def isEmpty(self):
+        # 判断栈是否为空
+        if self.top == -1:
+            return True
+        else:
+            return False
+
+    def isFull(self):
+        # 判断栈是否满
+        if self.top == self.size - 1:
+            return True
+        else:
+            return False
+
+    def peek(self):
+        # 查看栈顶的对象，但不移除
+        if self.isEmpty():
+            raise STACK_EXCEPTION('StackUnderflow')
+        else:
+            element = self.S[-1]
+            return element
+
+    def pop(self):
+        # 移除栈顶对象，并返回该对象的值
+        if self.isEmpty():
+            raise STACK_EXCEPTION('StackUnderflow')
+        else:
+            element = self.S[-1]
+            self.top = self.top - 1
+            del self.S[-1]
+            return element
+
+    def push(self, element):
+        # 把对象压入栈顶
+        if self.isFull():
+            raise STACK_EXCEPTION('StackOverflow')
+        else:
+            self.S.append(element)
+            self.top = self.top + 1
+
+
+class Queue(object):
+    def __init__(self, size=10):
+        self.Q = []
+        self.size = size  # 队列大小
+        self.end = -1  # 队头位置
+
+    def setSize(self, size):
+        # 设置队列的大小
+        self.size = size
+
+    def inQueue(self, element):
+        # 对象入队
+        if self.end < self.size - 1:
+            self.Q.append(element)
+            self.end += 1
+        else:
+            raise QUEUE_EXCEPTION('QueueFull')
+
+    def outQueue(self):
+        # 对象出队
+        if self.end == -1:
+            raise QUEUE_EXCEPTION('QueueEmpty')
+        else:
+            element = self.Q[0]
+            self.Q = self.Q[1:]
+            self.end -= 1
+            return element
 
 # 共用体 但是只能使用基本类型 现在采用结构体形式
 # class TaskStrategy(Union):

@@ -25,6 +25,7 @@ class ScriptTask:
         self.img = None
         self.random = False  # false 表示区中点
         self.delay = 1
+        self.
         for arg in args:
             img = image.cv2_imread(f"../imgs/{arg[0]}.png")
             self.templates[arg[0]] = img
@@ -79,7 +80,7 @@ class ScriptTask:
         avg = self.get_xy(img_model_path)
 
         if avg is None:
-            raise exception.NOT_FIND_Exception(f"😐😐😐没有匹配{name},retry")
+            raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{name},retry")
         logger.info("🖱️🖱️🖱️正在点击：{}，坐标xy：{}，{}", name, avg[0], avg[1])
         x, y = coordinates
         x += avg[0]
@@ -94,7 +95,7 @@ class ScriptTask:
             image.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
             after_click = f"{util.format_time(format.ONLY_TIME)}after-{name}"
             image.save_img(f"../imgs/fail/click/{after_click}.png", img)
-            raise exception.NOT_FIND_Exception(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
+            raise exception.NOT_FIND_EXCEPTION(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
         logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{x}，{y}")
         return self
 
@@ -151,7 +152,7 @@ class ScriptTask:
                     try:
                         self.auto_click(*arg).sleep(times[i + 1])
                         # 检查点击是否有效
-                    except exception.NOT_FIND_Exception as e:
+                    except exception.NOT_FIND_EXCEPTION as e:
                         # Handle the custom exception (e.g., log it)
                         logger.warning(e)
                         util.sleep(1)

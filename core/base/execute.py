@@ -9,6 +9,9 @@ from os import path, remove
 from numpy import full
 from glob import glob
 from pyautogui import click
+import cv2
+from collections import deque
+import threading
 
 # 执行方法
 logger = log.get_logger()
@@ -28,6 +31,7 @@ DEBUG = None
 GUARD = None
 
 
+# TODO 将debug 和 guard 完成
 def init_execute_processor():
     from yaml import load, Loader
     # 重试时间
@@ -68,7 +72,7 @@ def do_execute(node: ScriptArgs, screenshot):
             rule = node.match_rule
             template = image.cache_imread(f"../imgs/{rule.template_name}.png")
 
-            threshold, min_loc = image.do_match(screenshot, template)
+            threshold, min_loc = do_match(screenshot, template)
             if threshold > rule.threshold:
                 # 匹配成功
                 height, width = template.shape[:2]
@@ -89,6 +93,46 @@ def do_execute(node: ScriptArgs, screenshot):
             """ocr"""
 
 
+def do_match(target, template):
+    """
+    模板匹配
+    :param target: 目标图像
+    :param template: 模板图像
+    :return: 置信度 最佳匹配左上角
+    """
+    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+    # min_loc 左上角
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    if DEBUG:
+        do_debug(target=target, result=result, box=template.shape[:2])
+    return [(max_val - min_val), min_loc]
+
+
+def do_debug(target, result, box):
+    """
+    模板匹配debug
+    :param target: 需要标注的图片
+    :param result: 匹配结果
+    :param box: 模板图片
+    :return:
+    """
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    height, width = box[0], box[1]
+    # 绘制矩形边框，将匹配区域标注出来
+    # min_loc：矩形定点
+    # (min_loc[0]+twidth,min_loc[1]+theight)：矩形的宽高
+    # (0,0,225)：矩形的边框颜色；2：矩形边框宽度
+    strmin_val = str(min_val)
+    cv2.rectangle(target, min_loc, (min_loc[0] + width, min_loc[1] + height), (0, 0, 225), 2)
+    # 显示结果,并将匹配值显示在标题栏上
+    cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+now = lambda: time()
+
+
 class Execute(object):
     """运行构建器构建的参数"""
 
@@ -98,6 +142,7 @@ class Execute(object):
         self.retry_count = retry_count
         self.task_loop = task_loop
         self.monitor = monitor
+        self.pool = ThreadPoolExecutor(max_workers=10)
 
     def execute(self, task: [Build.BuildTaskArgs]):
         """根据类型执行不同的执行方式"""
@@ -123,14 +168,54 @@ class Execute(object):
 
     # TODO 将这个执行转化成类 用来方便参数传递 
     def execute_task_args(self, task: Build.BuildTaskArgs):
-        """正式开始执行"""
+
+        match self.monitor:
+            case "screen":
+                # 不开启视频流监控 采用截图方式
+                self.screen_execute(task)
+                pass
+            case "video":
+                # 视频流监控
+                self.video_execute(task)
+                pass
+
+    def screen_execute(self, task):
         # 初始化等待时间列表
-        times = util.init_arr_obj(len(task.nodes) + 1, -1)
+        times = full(len(task.nodes) + 1, -1)
         # TODO 将image和screet 进行整合
         region, screenshot_path = self.init_screenshot(task.win_title)
 
         temp = util.get_current_timestamp()
-        nodes = task.nodes
+        dag = task.dag
+        # 双端队65列 插入在队尾
+        queue = deque()
+
+        queue.append(dag.ind_nodes())
+        while queue.__len__() != 0:
+            start_time = now()
+            while now() - start_time < self.retry_time:
+                nodes = queue.pop()
+                scrreenshot = self.do_screenshot(region=region, screenshot_path=screenshot_path)
+                for node in nodes:
+                    self.pool.submit(do_execute, scrreenshot)
+                    do_execute(node, screenshot=scrreenshot)
+
+            # 创建线程
+            thread = threading.Thread(target=push, args=(queue, dag.downstream(node)))
+
+            # 启动线程
+            thread.start()
+            sleep(times[count + 1])
+            while thread.is_alive():
+                pass
+
+        # 返回下一步可到达的节点
+
+        next_nodes = dag.downstream(node)
+        for node in next_nodes:
+            scrreenshot = self.do_screenshot(region=region, screenshot_path=screenshot_path)
+            do_execute(node, screenshot=scrreenshot)
+            pass
         for c in range(self.task_loop):
             start_time = util.get_current_timestamp()
             while util.get_current_timestamp() - start_time < self.retry_time:
@@ -150,6 +235,16 @@ class Execute(object):
                         else start - temp
                     )
                     temp = start
+
+    def video_execute(self, task):
+        pass
+
+
+def
+
+def push(q: deque, V: [list]):
+    for v in V:
+        q.append(v)
 
 
 # 封装一些常用方法

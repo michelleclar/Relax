@@ -19,6 +19,7 @@
 | paddleocr     | PaddlePaddle深度学习框架的OCR识别工具,支持90多国语言识别 |
 | gradio        | web界面                                 |
 | loguru        | 日志框架                                  |
+|memory_profiler| 内存分析工具                                |
 
 > paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/quickstart.md#2)
 >

@@ -1,11 +1,11 @@
-import log
+from core.base.log import get_logger
 from enum import Enum
-from structs import DAG,OFFSET,POINT
+from core.base.structs import DAG,OFFSET,POINT
 from collections import namedtuple
 
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
-logger = log.get_logger()
+logger = get_logger()
 
 
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中
@@ -54,11 +54,12 @@ class Button(Enum):
     SECONDARY = "secondary"
 class ClickStrategy(object):
     """点击策略"""
-    def __init__(self, strategy: Strategy, offset: OFFSET,button=Button.LEFT):
+    def __init__(self, strategy: Strategy, offset=OFFSET(x=0,y=0),button=Button.LEFT):
         self.strategy = strategy
         self.offset = offset
         self.button = button
-
+    def __str__(self):
+        return f'ClickStrategy(strategy={self.strategy}, offset={self.offset}, button={self.button})'
 
 class InputKeyStrategy(object):
     """按键操作策略"""
@@ -183,18 +184,22 @@ class BuildTaskArgs(object):
 def main():
     button = Button.LEFT.value
     print(type(button))
-    # a1 = ScriptArgs("开始", ClickStrategy(Strategy.CENTER), MatchRule().template("action"))
-    # a2 = ScriptArgs("失败", ClickStrategy(Strategy.CENTER), MatchRule().template("failed"))
-    #
-    # a3 = ScriptArgs("结算", ClickStrategy(Strategy.CENTER), MatchRule().template("settle"))
-    # a4 = ScriptArgs("结束", ClickStrategy(Strategy.CENTER), MatchRule().template("end"))
-    # task = Build().BuildTaskArgs("aaa")
-    # task.add_nodes({a1, a2, a3, a4})
-    # task.add_edge(a1, a2)
-    # task.add_edge(a1, a3)
-    # task.add_edge(a3, a4)
-    # task.build()
-    # print(task)
+
+    a1 = ScriptArgs(task_name="开始", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("action"))
+    a2 = ScriptArgs(task_name="失败", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("failed"))
+
+    a3 = ScriptArgs(task_name="结算", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("settle"))
+    a4 = ScriptArgs(task_name="结束", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("end"))
+    task = Build().BuildTaskArgs("aaa")
+    task.add_nodes({a1, a2, a3, a4})
+    task.add_edge(a1, a2)
+    task.add_edge(a1, a3)
+    task.add_edge(a3, a4)
+    task.build()
+    print(task.dag.downstream(a1))
+    print(task.dag.all_downstreams(a1))
+    print(task.dag.ind_nodes())
+    print(task)
 
 
 if __name__ == '__main__':

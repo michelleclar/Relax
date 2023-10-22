@@ -55,5 +55,4 @@ def get_region_by_title(win_title:str):
     :return:region
     """
     win = pyautogui.getWindowsWithTitle(win_title)
-    left, top, right, bottom = win._getWindowRect()
-    return (left, top, right - left, bottom - top)
+    return win[0].box
