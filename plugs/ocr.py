@@ -1,4 +1,4 @@
-from core.base import image, screet, log
+from core.base import cv, simulate, log
 from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 import cv2

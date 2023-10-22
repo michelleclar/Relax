@@ -1,6 +1,6 @@
 from commons import img_name, exception
-from utils import util, format
-from core.base import image, screet, log
+from commons.utils import format, util
+from core.base import cv, simulate, log
 
 # 创建一个字典
 
@@ -16,7 +16,7 @@ class ScriptTask:
     # TODO 将存放任务流程更改成有向无环图
     def __init__(self, args):
         self.args = args  # 运行流程的参数
-        self.W, self.H = screet.current_resolution()
+        self.W, self.H = simulate.current_resolution()
         self.is_debug = False  # 是否开启debug
         self.template_threshold = 0.9  # 置信度 默认0.8
         self.region = (0, 0, self.W, self.H)
@@ -25,9 +25,8 @@ class ScriptTask:
         self.img = None
         self.random = False  # false 表示区中点
         self.delay = 1
-        self.
         for arg in args:
-            img = image.cv2_imread(f"../imgs/{arg[0]}.png")
+            img = cv.imread(f"../imgs/{arg[0]}.png")
             self.templates[arg[0]] = img
 
     def set_region(self, region):
@@ -86,26 +85,26 @@ class ScriptTask:
         x += avg[0]
         y += avg[1]
         x, y = self.real_check_xy([x, y])
-        screet.left_click([x, y])
+        simulate.left_click([x, y])
         # 判断是否点击成功
         img = self.do_screenshot()
-        if image.compare_img(self.img, img, 3):
+        if cv.compare_img(self.img, img, 3):
             # 可能没有进行点击
             before_click = f"{util.format_time(format.ONLY_TIME, start)}before-{name}"
-            image.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
+            cv.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
             after_click = f"{util.format_time(format.ONLY_TIME)}after-{name}"
-            image.save_img(f"../imgs/fail/click/{after_click}.png", img)
-            raise exception.NOT_FIND_EXCEPTION(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
+            cv.save_img(f"../imgs/fail/click/{after_click}.png", img)
+            raise exception.NOT_CLICK_EXCEPTION(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
         logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{x}，{y}")
         return self
 
     def do_screenshot(self):
         path = f"../imgs/screenshot/{self.screenshot_name}.png"
-        screet.do_screenshot(path, self.region)
-        return image.cv2_imread(path)
+        simulate.do_screenshot(path, self.region)
+        return cv.cv2_imread(path)
 
     def do_match(self, template):
-        return image.do_match(self.img, self.templates[template])
+        return cv.do_match(self.img, self.templates[template])
 
     def get_real_xy(self, avg):
         return [avg[0] + self.region[0], avg[1] + self.region[1]]
@@ -157,7 +156,7 @@ class ScriptTask:
                         logger.warning(e)
                         util.sleep(1)
                         continue
-                    except exception.NOT_CLICK_Exception as e:
+                    except exception.NOT_CLICK_EXCEPTION as e:
                         logger.warning(f"{e},retry")
                         continue
                     except Exception as e:

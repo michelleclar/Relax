@@ -1,43 +1,12 @@
-import os
 import glob
+import os
 import time as t
+from concurrent.futures import ThreadPoolExecutor, wait
+
 import numpy as np
 import pyautogui
-import cv2
-from core.base import image, screet
-from concurrent.futures import ThreadPoolExecutor, wait
-from core.base.build import Build, ClickStrategy, InputKeyStrategy, Strategy, MatchRule, ScriptArgs
+
 from core.base.structs import POINT
-
-
-# 具体执行逻辑
-def do_execute(node: ScriptArgs, screenshot):
-    rule = type(node.match_rule)
-    match rule:
-        case MatchRule.Template:
-            """模板匹配"""
-            rule = node.match_rule
-            template = image.cache_imread(f"../imgs/{rule.template_name}.png")
-
-            threshold, min_loc = image.do_match(screenshot, template)
-            if threshold > rule.threshold:
-                # 匹配成功
-                height, width = template.shape[:2]
-                strategy = type(node.strategy)
-                match strategy:
-                    case type(ClickStrategy):
-                        point = get_xy(node.strategy, min_loc, [height, width])
-                        click(point, node.strategy.button)
-                    case type(InputKeyStrategy):
-                        send_keys()
-            else:
-                # 匹配失败 retry
-                pass
-
-        case MatchRule.Ocr:
-            # Ocr
-            pass
-            """ocr"""
 
 
 # 生成随机字符串
@@ -52,25 +21,6 @@ def generate_random_string(length=8):
 def click(point: POINT, button: str):
     pyautogui.click(point.x, point.y, button=button)
 
-
-# 得到中点坐标
-def get_xy(strategy: ClickStrategy, min_loc, box):
-    _strategy = strategy.strategy
-    point = POINT()
-    match _strategy:
-        case Strategy.CENTER:
-            res = get_cent_xy(min_loc, box)
-            point = POINT(x=res[0], y=res[1])
-        case Strategy.RANDOM:
-            res = get_random_xy(min_loc, box)
-            point = POINT(x=res[0], y=res[1])
-        case Strategy.WITHOUT:
-            # 匹配之外的点
-            pass
-    # TODO 进行随机点偏移
-    point.x += strategy.offset.x
-    point.y += strategy.offset.y
-    return point
 
 def send_keys():
     pass

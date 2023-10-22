@@ -39,3 +39,27 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
 > 等以后出一个CUDA管理工具才会考虑
 > paddlepaddle-gpu
+
+
+```yml
+# 功能开关
+switch:
+  Debug: false
+  # 守护线程 如果启动这个线程会一直保持你的视窗可见
+  Guard: false
+# 执行参数
+execute:
+  # 任务重试时间
+  RetryTime: 30
+  # 任务循环次数
+  TaskLoop: 0
+  # 任务失败重试次数
+  RetryCount: 10
+  # 如果节点匹配失败次数超过指定次将会将该节点删除
+  FailCount: 100
+  # 视频流监控：video 屏幕监控：screen
+  Monitor: screen
+  
+
+
+```

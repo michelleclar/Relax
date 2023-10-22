@@ -1,11 +1,10 @@
-from core.base.log import get_logger
-from enum import Enum
-from core.base.structs import DAG,OFFSET,POINT
 from collections import namedtuple
-
+from enum import Enum
+from core.base.structs import DAG, OFFSET
+import core.base.log
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
-logger = get_logger()
+logger = core.base.log.get_logger()
 
 
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中
@@ -99,10 +98,12 @@ class ScriptArgs(object):
 
 class Build(object):
     def __init__(self):
+        self.win_titles = set()
         pass
 
     """通用构建器"""
     def BuildTaskArgs(self,win_title: str):
+        self.win_titles.add(win_title)
         return BuildTaskArgs(win_title=win_title) 
 
 class BuildTaskArgs(object):
@@ -118,7 +119,6 @@ class BuildTaskArgs(object):
 
         def get_graph(self):
             return self.dag.graph
-
         def add_nodes(self, *arg: set[ScriptArgs]):
             """添加任务节点"""
             try:

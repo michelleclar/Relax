@@ -56,6 +56,7 @@
 | imshow            | 显示图片             | cv2.imshow("MatchResult----MatchingValue=" + strmin_val, target) |
 | waitKey           | 监听键盘             | cv2.waitKey()                                                |
 | destroyAllWindows | 销毁所有imshow的图片 | cv2.destroyAllWindows()                                      |
+|imread|读取图片，返回一个数组|cv2.imread(path)|
 
 [^screenshot_path]:截图保存的路径
 [^Win32Window]:uml图

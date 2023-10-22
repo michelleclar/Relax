@@ -1,5 +1,6 @@
 pyautogui
-opencv-python
+opencv-python<=4.6.0.66
+opencv-contrib-python<=4.6.0.66
 numpy
 #Pillow~=9.5.0 图像处理库,用于图片读取,处理和保存
 #pywin32

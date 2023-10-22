@@ -1,30 +1,10 @@
-import pprint
-import time
 import threading
-from commons import const
-from core.base.structs import DAG
+import time
 from collections import deque
+
 from core.base.build import Build, ScriptArgs, MatchRule, ClickStrategy, Strategy
-from timeit import timeit
-from memory_profiler import profile
-
-
-def main():
-    const.init()
-    print(len(const.execute_consts))
-
-
-def test_dga():
-    dag = DAG()
-    dag.add_node("A")
-    dag.add_node("B")
-    dag.add_node("C")
-    dag.add_node("D")
-    dag.add_node("E")
-    dag.add_edge("A", "B")
-    dag.add_edge("A", "C")
-    dag.add_edge("C", "D")
-    print(dag.topological_sort)
+from core.base.structs import DAG
+import cv2
 
 
 def test_deque():
@@ -55,8 +35,6 @@ def test_deque():
             if len(down) != 0:
                 q.append(down)
 
-def p(arg):
-    print(arg)
 
 def test_asyncio():
     import asyncio
@@ -115,5 +93,68 @@ def test_thread_poll():
     print("===")
 
 
+def test_autpjmp():
+    a1 = ScriptArgs(task_name="开始", strategy=ClickStrategy(Strategy.CENTER),
+                    match_rule=MatchRule().template("action"))
+    a2 = ScriptArgs(task_name="失败", strategy=ClickStrategy(Strategy.CENTER),
+                    match_rule=MatchRule().template("failed"))
+
+    a3 = ScriptArgs(task_name="结算", strategy=ClickStrategy(Strategy.CENTER),
+                    match_rule=MatchRule().template("settle"))
+    a4 = ScriptArgs(task_name="结束", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("end"))
+    task = Build().BuildTaskArgs("aaa")
+    task.add_nodes({a1, a2, a3, a4})
+    task.add_edge(a1, a2)
+    task.add_edge(a1, a3)
+    task.add_edge(a3, a4)
+    task.build()
+    dag = task.dag
+    q = deque()
+    head = dag.ind_nodes()
+    q.append(head)
+    while q.__len__() != 0:
+        nodes = q.pop()
+        start_time = now()
+        while now() - start_time < 10:
+
+            # 批量处理
+            for node in nodes:
+                print(node)
+
+                down = dag.downstream(node)
+                if len(down) != 0:
+                    q.append(down)
+                continue
+            break
+        else:
+            # Max retries exceeded, raise an exception or handle it as needed
+            print(f"🙃🙃🙃{10}秒点击失败：{str(node)}")
+
+
+def main():
+    # 创建视频捕获对象
+    capture = cv2.VideoCapture(-1)
+
+    # 开始循环捕获视频流
+    while True:
+        # 捕获一帧视频
+        ret, frame = capture.read()
+
+        # 显示视频帧
+        cv2.imshow("frame", frame)
+
+        # 等待键盘输入
+        key = cv2.waitKey(1)
+
+        # 如果按下 Esc 键，则退出
+        if key == 27:
+            break
+
+    # 释放资源
+    capture.release()
+    cv2.destroyAllWindows()
+
+
 if __name__ == '__main__':
-    test_deque()
+
+    main()
