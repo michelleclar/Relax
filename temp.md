@@ -118,3 +118,16 @@ def open_video(region):
     cap.release()
     cv2.destroyAllWindows()
 ```
+
+```python
+from mss import mss
+import cv2
+import numpy as np
+while True:
+    img = mss().grab(monitor={"top":0,"left":0,"width":1920,"height":1080})
+    img = np.array(img)
+    cv2.imshow("img",img)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
+        break
+```
