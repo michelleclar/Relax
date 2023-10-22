@@ -12,3 +12,4 @@ pillow
 matplotlib
 memory_profiler
 pyscreeze
+mss

@@ -8,20 +8,23 @@
 > 这里是不存在的，而python协程他实际是单线程，在函数对象进行代码行切换而已，而这个切换我认为再快也会有时间的损失，所以不打算使用协程
 > ocr 目前使用不是很多，而且好用的ocr他对于版本有些许限制，打算将他当插件抽取出来
 > 图像识别 最终选择的是yolo8 因为机器学习并不通用 所以不打算将他加进核心中
+
 ### 技术选型
 
-| 库名            | 作用                                    |
-|:--------------|:--------------------------------------|
-| pyautogui     | 屏幕自动化控制库,用于获取屏幕截图等                    |
-| opencv-python | OpenCV计算机视觉库的Python接口,用于图片处理和裁剪       |
-| numpy         | Python科学计算库,用于矩阵运算和算法                 |
-| paddlepaddle  | PaddlePaddle深度学习框架,提供深度学习功能           |
-| paddleocr     | PaddlePaddle深度学习框架的OCR识别工具,支持90多国语言识别 |
-| gradio        | web界面                                 |
-| loguru        | 日志框架                                  |
-|memory_profiler| 内存分析工具                                |
+| 库名              | 作用                                    |
+|:----------------|:--------------------------------------|
+| pyautogui       | 屏幕自动化控制库,用于获取屏幕截图等                    |
+| opencv-python   | OpenCV计算机视觉库的Python接口,用于图片处理和裁剪       |
+| numpy           | Python科学计算库,用于矩阵运算和算法                 |
+| paddlepaddle    | PaddlePaddle深度学习框架,提供深度学习功能           |
+| paddleocr       | PaddlePaddle深度学习框架的OCR识别工具,支持90多国语言识别 |
+| gradio          | web界面                                 |
+| loguru          | 日志框架                                  |
+| memory_profiler | 内存分析工具                                |
+| mss             | 高性能截图工具                               |
 
-> paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/quickstart.md#2)
+>
+paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/quickstart.md#2)
 >
 > 本项目导入的是cpu版本
 
@@ -39,7 +42,6 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
 > 等以后出一个CUDA管理工具才会考虑
 > paddlepaddle-gpu
-
 
 ```yml
 # 功能开关
@@ -59,7 +61,7 @@ execute:
   FailCount: 100
   # 视频流监控：video 屏幕监控：screen
   Monitor: screen
-  
+
 
 
 ```
