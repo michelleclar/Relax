@@ -60,10 +60,11 @@ tasks:
         match_rule:
           type: "template"
           value: "action"
-      - node: "结束"
-        strategy:
-          type: "ClickStrategy"
-        match_rule:
-          type: "template"
-          value: "end"
+        child:
+          - node: "结束"
+            strategy:
+              type: "ClickStrategy"
+            match_rule:
+              type: "template"
+              value: "end"
 

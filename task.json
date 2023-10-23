@@ -1,0 +1,87 @@
+{
+  "tasks": [
+    {
+      "task": "主账号",
+      "nodes": [
+        {
+          "node": "开始",
+          "strategy": {
+            "type": "ClickStrategy",
+            "policy": "CENTER",
+            "offset": {
+              "x": 0,
+              "y": 0
+            },
+            "button": "left"
+          },
+          "match_rule": {
+            "type": "template",
+            "value": "action",
+            "threshold": 0.9
+          },
+          "child": [
+            {
+              "node": "失败",
+              "strategy": {
+                "type": "ClickStrategy"
+              },
+              "match_rule": {
+                "type": "template",
+                "value": "end"
+              }
+            },
+            {
+              "node": "结算",
+              "strategy": {
+                "type": "ClickStrategy"
+              },
+              "match_rule": {
+                "type": "template",
+                "value": "end"
+              },
+              "child": [
+                {
+                  "node": "结束",
+                  "strategy": {
+                    "type": "ClickStrategy"
+                  },
+                  "match_rule": {
+                    "type": "template",
+                    "value": "end"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "task": "副账号",
+      "nodes": [
+        {
+          "node": "开始",
+          "strategy": {
+            "type": "ClickStrategy"
+          },
+          "match_rule": {
+            "type": "template",
+            "value": "action"
+          },
+          "child": [
+            {
+              "node": "结束",
+              "strategy": {
+                "type": "ClickStrategy"
+              },
+              "match_rule": {
+                "type": "template",
+                "value": "end"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
