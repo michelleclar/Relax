@@ -113,23 +113,28 @@ class Button(Enum):
     PRIMARY = "primary"
     SECONDARY = "secondary"
 
+
 class Strategy(object):
     class ClickStrategy(object):
         """点击策略"""
 
-        def __init__(self, strategy: Policy, offset=OFFSET(x=0, y=0), button=Button.LEFT):
-            self.strategy = strategy
+        def __init__(self, policy=Policy.CENTER, offset=OFFSET(x=0, y=0), button=Button.LEFT):
+            self.policy = policy
             self.offset = offset
             self.button = button
 
         def __str__(self):
-            return f'ClickStrategy(strategy={self.strategy}, offset={self.offset}, button={self.button})'
+            return f'ClickStrategy(strategy={self.policy}, offset={self.offset}, button={self.button})'
 
     class InputKeyStrategy(object):
         """按键操作策略"""
-        CLICK_CENTER_MATCH_POSITION = 'click_center_match_position'
-        CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
-        CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
+
+        def __init__(self, key='ESC'):
+            self.key = key
+
+        def __str__(self):
+            return f'InputKeyStrategy(keys={self.key})'
+
 
 # class ClickStrategy(object):
 #     """点击策略"""
@@ -225,6 +230,17 @@ class BuildTaskArgs(object):
                     self.edges.add(edge)
             else:
                 logger.warning(f"添加关系时，{ind_node}或{dep_node}节点不存在")
+        except TypeError as t:
+            logger.error(f"键重复，{t}")
+        except Exception as e:
+            logger.error(f"{log.detail_error()}")
+        return self
+
+    def add_edges(self, *arg):
+        """在任务节点添加边 因为底层数据结构采用dag,所有只能往下运行"""
+        try:
+
+            self.edges.update(*arg)
         except TypeError as t:
             logger.error(f"键重复，{t}")
         except Exception as e:

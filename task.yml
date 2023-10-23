@@ -1,1 +1,69 @@
-# 脚本参数
+# 脚本参数 目前只能处理简单逻辑 如果想处理回调之类的 目前是不支持的 后续打算提供接口 然后写lua来进行客制化处理
+tasks:
+  # win_title
+  - task: "主账号"
+    nodes:
+      # 任务事件名
+      - node: "开始"
+        # 处理策略 点击策略 和 按键策略
+        strategy:
+          type: "ClickStrategy"
+                    # 点击处理 CENTER：匹配中心 RANDOM：匹配区域随机点 WITHOUT：不点击匹配区域 默认CENTER 可以忽略
+          policy: "CENTER"
+          # 偏移量 可以忽略 默认不偏移
+          offset:
+            x: 0
+            y: 0
+          # 鼠标按键 left right 可以忽略 默认左键点击
+          button: "left"
+#        strategy:
+#          type: "InputStrategy"
+#          # 可以忽略 默认ESC
+#          key: "ESC"
+        # 匹配规则 template（value为模板名称） Ocr（value为需要匹配的文字，如果匹配有多个只会处理第一个）
+        match_rule:
+          type: "template"
+          value: "action"
+          # 置信度 默认0.9
+          threshold: 0.9
+        child:
+          - node: "失败"
+            strategy:
+              type: "ClickStrategy"
+            match_rule:
+              type: "template"
+              value: "end"
+          - node: "结算"
+            strategy:
+              type: "ClickStrategy"
+            match_rule:
+              type: "template"
+              value: "end"
+            child:
+              - node: "结束"
+                strategy:
+                  type: "ClickStrategy"
+                match_rule:
+                  type: "template"
+                  value: "end"
+  #    match_rule:
+  #      type: "ocr"
+  #      value: "开始"
+  - task: "副账号"
+    # 这个是最简短配置
+    nodes:
+      # 任务事件名
+      - node: "开始"
+        # 处理策略 点击策略 和 按键策略
+        strategy:
+          type: "ClickStrategy"
+        match_rule:
+          type: "template"
+          value: "action"
+      - node: "结束"
+        strategy:
+          type: "ClickStrategy"
+        match_rule:
+          type: "template"
+          value: "end"
+
