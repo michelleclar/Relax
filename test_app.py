@@ -23,8 +23,6 @@ def main():
         task = build.BuildTaskArgs(pool_name)
         task.add_nodes(_nodes)
         task.add_edges(_edges)
-        # for edge in _edges:
-        #     task.add_edge(*edge)
         task.build()
         tasks.append(task)
     print(build, tasks)
