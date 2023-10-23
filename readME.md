@@ -32,9 +32,9 @@ paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[
 
 ### 项目环境搭建
 
-> python版本 3.8
-> 3.10测试也可以安装依赖
-> 主要影响因素在百度的ocr上 后面打算将这个功能拆分出去 不能让他影响主项目
+> ~~python版本 3.8~~
+> python版本 3.10
+> 主要影响因素在百度的ocr上 最高支持10后面打算将这个功能拆分出去 不能让他影响主项目
 
 ```sh
 pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
