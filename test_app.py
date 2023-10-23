@@ -28,30 +28,6 @@ def main():
     print(build, tasks)
 
 
-_nodes = set()
-_edge = set()
-
-
-# def parse_nodes(nodes):
-#     heads = defaultdict(list)
-#     for node in nodes:
-#         a = parse_node(node)
-#         if node.get('child'):
-#             # 下一步
-#             for child in node['child']:
-#                 parse_node(child)
-
-
-#     for head in heads:
-#         parse_edge(head)
-#     for node in heads:
-#         a = parse_node(node)
-#         if node.get('child'):
-#             # 下一步
-#             c = parse_nodes(node['child'])
-#             _edge.add((a, c))
-#     return a
-
 def parse(nodes):
     _nodes = set()
     _edges = set()
