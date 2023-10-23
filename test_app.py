@@ -1,14 +1,13 @@
 import yaml
-from collections import defaultdict
+
 from core.base.execute import ScriptArgs, Strategy, MatchRule, Button, Policy, Build
-from core.base.structs import POINT
 from core.base.log import get_logger, detail_error
+from core.base.structs import POINT
 
 logger = get_logger()
 
+
 # 去除dga
-
-
 
 
 def main():
@@ -28,7 +27,8 @@ def main():
         #     task.add_edge(*edge)
         task.build()
         tasks.append(task)
-    print(build,tasks)
+    print(build, tasks)
+
 
 _nodes = set()
 _edge = set()
