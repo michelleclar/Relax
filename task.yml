@@ -2,6 +2,8 @@
 tasks:
   # win_title
   - task: "主账号"
+    # 循环次数 默认10
+    taskloop: 10
     nodes:
       # 任务事件名
       - node: "开始"

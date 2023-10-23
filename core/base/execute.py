@@ -1,4 +1,4 @@
-import sys
+import mss
 from collections import deque, namedtuple
 from concurrent.futures import ThreadPoolExecutor, wait
 import time as t
@@ -7,7 +7,7 @@ import numpy as np
 from enum import Enum
 from commons import exception
 from core.base import cv, simulate, log
-from core.base.structs import DAG, OFFSET, POINT
+from core.base.structs import DAG, OFFSET, POINT, BOX
 
 # 执行方法
 logger = log.get_logger()
@@ -28,7 +28,6 @@ GUARD = None
 POOL = ThreadPoolExecutor(max_workers=10)
 
 
-# TODO 将debug 和 guard 完成
 def init_execute_processor():
     from yaml import load, Loader
     logger.info("正在读取配置")
@@ -136,25 +135,6 @@ class Strategy(object):
             return f'InputKeyStrategy(keys={self.key})'
 
 
-# class ClickStrategy(object):
-#     """点击策略"""
-#
-#     def __init__(self, strategy: Policy, offset=OFFSET(x=0, y=0), button=Button.LEFT):
-#         self.strategy = strategy
-#         self.offset = offset
-#         self.button = button
-#
-#     def __str__(self):
-#         return f'ClickStrategy(strategy={self.strategy}, offset={self.offset}, button={self.button})'
-#
-#
-# class InputKeyStrategy(object):
-#     """按键操作策略"""
-#     CLICK_CENTER_MATCH_POSITION = 'click_center_match_position'
-#     CLICK_RANDOM_MATCH_POSITION = 'click_random_match_position'
-#     CLICK_WITHOUT_MATCH_POSITION = 'click_without_match_position'
-
-
 class ScriptArgs(object):
     """节点参数"""
     _auto_increment_weight = 0
@@ -200,11 +180,12 @@ class Build(object):
 class BuildTaskArgs(object):
     """任务流构建器"""
 
-    def __init__(self, win_title: str):
+    def __init__(self, win_title: str, task_loop: int):
         self.dag = DAG()
         self.win_title = win_title
         self.nodes = set()
         self.edges = set()
+        self.task_loop = task_loop
 
     def get_win_title(self):
         return self.win_title
@@ -302,7 +283,7 @@ class Execute(object):
         self.retry_count = retry_count
         self.task_loop = task_loop
         self.monitor = monitor
-        self.pool = ThreadPoolExecutor(max_workers=10,thread_name_prefix='')
+        self.pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix='')
 
     def execute(self, task: [Build.BuildTaskArgs]):
         """根据类型执行不同的执行方式"""
@@ -328,100 +309,25 @@ class Execute(object):
 
     # TODO 将这个执行转化成类 用来方便参数传递 
     def execute_task_args(self, task: BuildTaskArgs):
-
+        region = simulate.get_region_by_title(task.win_title)
         match self.monitor:
             case "screen":
                 # 不开启视频流监控 采用截图方式 响应相对较慢
                 self.screen_execute(task)
-                pass
+                # TODO 在BuildTaskArgs 加入 task_loop 属性
+                ScreenExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
             case "video":
                 # 视频流监控
                 self.video_execute(task)
                 pass
 
-    def screen_execute(self, task):
-        # 初始化等待时间列表
-        times = np.full(len(task.nodes) + 1, -1)
-        # TODO 将image和screet 进行整合
-        region, screenshot_path = self.init_screenshot(task.win_title)
-
-        temp = now()
-        dag = task.dag
-        # 双端队列 插入在队尾
-        queue = deque()
-
-        queue.append(dag.ind_nodes())
-        while queue.__len__() != 0:
-            nodes = queue.pop()
-            start_time = now()
-            # TODO进行拆分
-            flag = False
-            while now() - start_time < self.retry_time:
-                scrreenshot = self.do_screenshot(region=region, screenshot_path=screenshot_path)
-
-                # 批量处理
-                for node in nodes:
-                    try:
-                        self.do_execute(node, screenshot=scrreenshot)
-                    except exception.NOT_FIND_EXCEPTION as e:
-                        logger.warning(e)
-                        t.sleep(1)
-                        continue
-                    except exception.NOT_CLICK_EXCEPTION as e:
-                        logger.warning(f"{e},retry")
-                        continue
-                    except Exception as e:
-                        logger.error(f"😭😭😭{log.detail_error()}")
-                        continue
-                    down = dag.downstream(node)
-                    if len(down) != 0:
-                        queue.append(down)
-                    flag = True
-                    break
-                if flag:
-                    break
-            else:
-                # Max retries exceeded, raise an exception or handle it as needed
-                logger.warning(f"🙃🙃🙃{self.retry_time}秒点击失败：{str(node)}")
-
     def video_execute(self, task):
         pass
-
-    def do_execute(self, node: ScriptArgs, screenshot):
-        rule = type(node.match_rule)
-        match rule:
-            case MatchRule.Template:
-                """模板匹配"""
-                rule = node.match_rule
-                template = cv.cache_imread(f"./imgs/{rule.template_name}.png")
-
-                threshold, min_loc = cv.do_match(screenshot, template)
-                if threshold > rule.threshold:
-                    # 匹配成功
-                    # TODO 进行拆分
-                    height, width = template.shape[:2]
-                    strategy_type = type(node.strategy)
-                    match strategy_type:
-                        case Strategy.ClickStrategy:
-                            point = get_xy(node.strategy, min_loc, [height, width])
-                            simulate.click(point, node.strategy.button.value)
-
-                        case Strategy.InputKeyStrategy.__base__:
-                            simulate.send_keys()
-
-                else:
-                    # 匹配失败 retry
-                    raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{rule.template_name},retry")
-
-            case MatchRule.Ocr:
-                # Ocr
-                pass
-                """ocr"""
 
 
 # 得到中点坐标
 def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
-    _strategy = strategy.strategy
+    _strategy = strategy.policy
     point = POINT()
     match _strategy:
         case Policy.CENTER:
@@ -480,3 +386,112 @@ def run(build: [Build], script_tasks: list[BuildTaskArgs]):
         tasks.append(task)
         t.sleep(1)
     wait(tasks)
+
+
+class ScreenExecute(object):
+    def __init__(self, region, task_loop, task_args):
+        self.mss = mss.mss()  # 截图
+        self.region = region  # 监视区域
+        self.retry_time = RETRYTIME  # 重试时间
+        self.task_loop = task_loop  # 循环次数
+        self.task_args = task_args  # 运行参数
+        self.retry_count = RETRYCOUNT
+
+    def execute(self):
+        dag = self.task_args.dag
+        # 双端队列 插入在队尾
+        q = deque()
+
+        q.append(dag.ind_nodes())
+        while q.__len__() != 0:
+            nodes = q.pop()
+            start_time = now()
+            # TODO进行拆分
+            flag = False
+            while now() - start_time < self.retry_time:
+                scrreenshot = np.array(self.mss.grab(self.region))
+                self.do_execute(q=q, nodes=nodes, screenshot=scrreenshot)
+
+    def do_execute(self, q, nodes: list[ScriptArgs], screenshot):
+        # 批量处理
+        for node in nodes:
+
+            try:
+                box, min_loc = self.execute_match_rule(match_rule=node.match_rule, screenshot=screenshot)  # 匹配
+                self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
+                # TODO 进行是否点击校验
+                self.is_click(node.match_rule)
+            except exception.NOT_FIND_EXCEPTION as e:
+                logger.warning(e)
+                t.sleep(1)
+                continue
+            except exception.NOT_CLICK_EXCEPTION as e:
+                logger.warning(f"{e},retry")
+                # TODO重试
+                count = 0
+                self.retry(match_rule=node.match_rule, strategy=node.strategy, count=count)
+                continue
+            except Exception as e:
+                logger.error(f"😭😭😭{log.detail_error()}")
+                continue
+            down = self.task_args.dag.downstream(node)
+            if len(down) != 0:
+                q.append(down)
+
+        else:
+            # Max retries exceeded, raise an exception or handle it as needed
+            logger.warning(f"🙃🙃🙃{self.retry_time}秒点击失败：{str(node)}")
+
+    def retry(self, match_rule, strategy, count):
+        if count > self.retry_count:
+            return
+        try:
+            box, min_loc = self.execute_match_rule(match_rule=match_rule,
+                                                   screenshot=np.array(self.mss.grab(self.region)))
+            self.execute_strategy(strategy=strategy, box=box, min_loc=min_loc)
+            self.is_click(match_rule=match_rule)
+        except exception.NOT_FIND_EXCEPTION as e:
+            # 表示没有找到 不在进行重试
+            return
+        except exception.NOT_CLICK_EXCEPTION as e:
+            count += 1
+            self.retry(match_rule=match_rule, strategy=strategy, count=count)
+
+    def execute_match_rule(self, match_rule, screenshot):
+
+        match type(match_rule):
+            case MatchRule.Template:
+                """模板匹配"""
+
+                template = cv.cache_imread(f"./imgs/{match_rule.template_name}.png")
+
+                threshold, min_loc = cv.do_match(screenshot, template)
+                if threshold > match_rule.threshold:
+                    # 匹配成功
+                    height, width = template.shape[:2]
+                    return BOX(height=height, width=width), min_loc
+                else:
+                    # 匹配失败 retry
+                    raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name},retry")
+            case MatchRule.Ocr:
+                # Ocr
+                pass
+                """ocr"""
+
+    def execute_strategy(self, strategy, min_loc, box):
+        match type(strategy):
+            case Strategy.ClickStrategy:
+                point = get_xy(strategy, min_loc, box)
+                simulate.click(point, strategy.button.value)
+
+            case Strategy.InputKeyStrategy:
+                simulate.send_keys()
+
+    def is_click(self, match_rule):
+        try:
+            self.execute_match_rule(match_rule=match_rule, screenshot=np.array(self.mss.grab(self.region)))
+        except exception.NOT_FIND_EXCEPTION as e:
+            # 表示已经点击
+            return True
+
+        raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐没有点击{match_rule.template_name}")

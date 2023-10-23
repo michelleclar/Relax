@@ -2,7 +2,7 @@ import threading
 import time
 from collections import deque
 
-from core.base.build import Build, ScriptArgs, MatchRule, ClickStrategy, Strategy
+from core.base.execute import Build, ScriptArgs, MatchRule, Strategy
 from core.base.structs import DAG
 import cv2
 
@@ -131,30 +131,17 @@ def test_autpjmp():
             print(f"🙃🙃🙃{10}秒点击失败：{str(node)}")
 
 
-def main():
-    # 创建视频捕获对象
-    capture = cv2.VideoCapture(-1)
+def test_match():
+    strategy = Strategy.ClickStrategy()
 
-    # 开始循环捕获视频流
-    while True:
-        # 捕获一帧视频
-        ret, frame = capture.read()
+    match type(strategy):
+        case Strategy.ClickStrategy:
+            print(1)
 
-        # 显示视频帧
-        cv2.imshow("frame", frame)
-
-        # 等待键盘输入
-        key = cv2.waitKey(1)
-
-        # 如果按下 Esc 键，则退出
-        if key == 27:
-            break
-
-    # 释放资源
-    capture.release()
-    cv2.destroyAllWindows()
+        case Strategy.InputKeyStrategy:
+            print(2)
 
 
 if __name__ == '__main__':
 
-    main()
+    test_match()

@@ -13,7 +13,8 @@ def main():
     fpss = []
     with mss.mss() as sct:
         # Part of the screen to capture
-        monitor = {"top": 40, "left": 0, "width": 800, "height": 640}
+        # monitor = {"top": 40, "left": 0, "width": 800, "height": 640}
+        monitor = (40,0, 800, 640)
         static_time = now()
         while now() - static_time < 60:
             last_time = time.time()

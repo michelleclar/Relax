@@ -263,6 +263,9 @@ class POINT(Structure):
                 ("y", c_long)]
 
 
+class BOX(Structure):
+    _fields_ = [("height", c_long),
+                ("width",c_long)]
 class Stack(object):
     def __init__(self, size=10):
         self.S = []
