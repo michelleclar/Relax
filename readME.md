@@ -13,7 +13,7 @@
 
 | 库名              | 作用                                    |
 |:----------------|:--------------------------------------|
-| pyautogui       | 屏幕自动化控制库,用于获取屏幕截图等                    |
+| ~~pyautogui~~       | 屏幕自动化控制库,用于获取屏幕截图等                    |
 | opencv-python   | OpenCV计算机视觉库的Python接口,用于图片处理和裁剪       |
 | numpy           | Python科学计算库,用于矩阵运算和算法                 |
 | paddlepaddle    | PaddlePaddle深度学习框架,提供深度学习功能           |
@@ -22,6 +22,8 @@
 | loguru          | 日志框架                                  |
 | memory_profiler | 内存分析工具                                |
 | mss             | 高性能截图工具                               |
+|pymouse|高性能操作鼠标库|
+|pykeyboard|高性能键盘操作库|
 
 >
 paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/quickstart.md#2)

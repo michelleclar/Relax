@@ -302,7 +302,7 @@ class Execute(object):
         self.retry_count = retry_count
         self.task_loop = task_loop
         self.monitor = monitor
-        self.pool = ThreadPoolExecutor(max_workers=10)
+        self.pool = ThreadPoolExecutor(max_workers=10,thread_name_prefix='')
 
     def execute(self, task: [Build.BuildTaskArgs]):
         """根据类型执行不同的执行方式"""
@@ -354,6 +354,7 @@ class Execute(object):
         while queue.__len__() != 0:
             nodes = queue.pop()
             start_time = now()
+            # TODO进行拆分
             flag = False
             while now() - start_time < self.retry_time:
                 scrreenshot = self.do_screenshot(region=region, screenshot_path=screenshot_path)
@@ -397,6 +398,7 @@ class Execute(object):
                 threshold, min_loc = cv.do_match(screenshot, template)
                 if threshold > rule.threshold:
                     # 匹配成功
+                    # TODO 进行拆分
                     height, width = template.shape[:2]
                     strategy_type = type(node.strategy)
                     match strategy_type:
