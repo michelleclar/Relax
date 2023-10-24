@@ -1,5 +1,6 @@
 import mss
-from collections import deque, namedtuple
+from collections import deque
+import queue
 from concurrent.futures import ThreadPoolExecutor, wait
 import time as t
 
@@ -7,7 +8,7 @@ import numpy as np
 from enum import Enum
 from commons import exception
 from core.base import cv, simulate, log
-from core.base.structs import DAG, OFFSET, POINT, BOX
+from core.base.structs import POINT, BOX
 from commons.utils.format import DataFormat
 
 # 执行方法
@@ -56,8 +57,6 @@ def init_execute_processor():
 
 
 # ===========================================================
-
-Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
 
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中
@@ -110,7 +109,7 @@ class Button(Enum):
 class Strategy(object):
     class ClickStrategy(object):
         """点击策略"""
-
+        from core.base.structs import OFFSET
         def __init__(self, policy=Policy.CENTER, offset=OFFSET(x=0, y=0), button=Button.LEFT):
             self.policy = policy
             self.offset = offset
@@ -178,6 +177,7 @@ class BuildTaskArgs(object):
     """任务流构建器"""
 
     def __init__(self, win_title: str, task_loop: int):
+        from core.base.structs import DAG
         self.dag = DAG()
         self.win_title = win_title
         self.nodes = set()
@@ -203,7 +203,7 @@ class BuildTaskArgs(object):
         """在任务节点添加边 因为底层数据结构采用dag,所有只能往下运行"""
         try:
             if ind_node in self.nodes and dep_node in self.nodes:
-                edge = Edge(ind_node, dep_node)
+                edge = (ind_node, dep_node)
                 if edge not in self.edges:
                     self.edges.add(edge)
             else:
@@ -302,6 +302,7 @@ class Execute(object):
                 # 视频流监控
                 VideoExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
 
+
 # 得到中点坐标
 def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
     _strategy = strategy.policy
@@ -368,6 +369,7 @@ def run(build: [Build], script_tasks: list[BuildTaskArgs]):
         tasks.append(task)
         t.sleep(1)
     wait(tasks)
+
 
 class ScreenExecute(object):
     def __init__(self, region, task_loop, task_args: BuildTaskArgs):
@@ -598,9 +600,8 @@ class VideoExecute(object):
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
-            name = f'{generate_current_time_name()}.png'
-            path = f'./imgs/not_click/{name}'
-            logger.warning(f'重试次数{count},图片保存名称为{name}')
+            path = f'./imgs/not_click/{generate_current_time_name()}.png'
+            logger.warning(f'重试次数{count},path:{path}')
             cv.save_img(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
@@ -645,3 +646,24 @@ class VideoExecute(object):
         except exception.NOT_FIND_EXCEPTION as e:
             return True
         raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
+
+
+# TODO 启动一个线程来进行图片的保存处理 一个任务一个队列
+class asyn_queue(object):
+
+    def __init__(self):
+        # key win_title
+        self.queue = queue.Queue() # 对外提供的队列
+        self.queue_dict = list(deque)
+        self.mss = mss.mss()  # 截图
+
+    def put(self, path, region):
+        self.queue.put(item=(path, region))
+
+    def run(self):
+        while True:
+            if not self.queue.empty():
+                pass
+
+
+
