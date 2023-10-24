@@ -1,0 +1,20 @@
+### 使用方法
+
+```yaml
+# 功能开关
+switch:
+  # 开启Debug
+  Debug: false
+  # 守护线程 如果启动这个线程会一直保持你的视窗可见
+  Guard: false
+# 执行参数
+execute:
+  # 任务重试时间
+  RetryTime: 30
+  # 任务失败重试次数
+  RetryCount: 10
+  # 如果节点匹配失败次数超过指定次将会将该节点删除
+  FailCount: 100
+  # 视频流监控：video 屏幕监控：screen
+  Monitor: screen
+ 

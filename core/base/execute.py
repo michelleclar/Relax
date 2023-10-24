@@ -28,6 +28,10 @@ POOL = ThreadPoolExecutor(max_workers=10)
 
 
 def init_execute_processor():
+    """
+
+    :return:
+    """
     from yaml import load, Loader
     logger.info("正在读取配置")
     with open("config.yml", "r", encoding='utf-8') as f:
@@ -71,12 +75,25 @@ class MatchRule(object):
     """
 
     def ocr(self, text):
+        """
+
+        :param text:
+        :return:
+        """
         return self.Ocr(text=text)
 
     def template(self, template_name):
+        """
+
+        :param template_name:
+        :return:
+        """
         return self.Template(template_name=template_name)
 
     class Ocr(object):
+        """
+
+        """
         def __init__(self, text):
             self.text = text
 
@@ -84,6 +101,9 @@ class MatchRule(object):
             return f'Ocr(text={self.text})'
 
     class Template(object):
+        """
+
+        """
         def __init__(self, template_name, threshold=None):
             self.template_name = template_name
             self.threshold = threshold if threshold is not None else 0.9
@@ -162,13 +182,20 @@ class ScriptArgs(object):
 
 
 class Build(object):
+    """
+
+    """
     def __init__(self):
         self.win_titles = set()
         pass
 
-    """通用构建器"""
-
     def BuildTaskArgs(self, win_title: str, task_loop: int):
+        """
+
+        :param win_title:
+        :param task_loop:
+        :return:
+        """
         self.win_titles.add(win_title)
         return BuildTaskArgs(win_title=win_title, task_loop=task_loop)
 
@@ -282,7 +309,10 @@ class Execute(object):
         self.pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix='')
 
     def execute(self, task: [Build.BuildTaskArgs]):
-        """根据类型执行不同的执行方式"""
+        """
+
+        :param task:
+        """
         task_type = type(task)
         match task_type:
             case Build.BuildTaskArgs:
@@ -290,8 +320,12 @@ class Execute(object):
             case _:
                 logger.error(f'不支持此类型：{task_type}')
 
-    # TODO 将这个执行转化成类 用来方便参数传递 
+    # TODO 将这个执行转化成类 用来方便参数传递
     def execute_task_args(self, task: BuildTaskArgs):
+        """
+
+        :param task:
+        """
         region = simulate.get_region_by_title(task.win_title)
         match self.monitor:
             case "screen":
@@ -305,6 +339,13 @@ class Execute(object):
 
 # 得到中点坐标
 def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
+    """
+
+    :param strategy:
+    :param min_loc:
+    :param box:
+    :return:
+    """
     _strategy = strategy.policy
     point = POINT()
     match _strategy:
@@ -325,10 +366,19 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
 
 
 def send_keys():
+    """
+
+    """
     pass
 
 
 def get_cent_xy(avg, box):
+    """
+
+    :param avg:
+    :param box:
+    :return:
+    """
     height, width = box
     lower_right = (avg[0] + width, avg[1] + height)
     x = (int((avg[0] + lower_right[0]) / 2))
@@ -337,6 +387,12 @@ def get_cent_xy(avg, box):
 
 
 def get_random_xy(avg, box):
+    """
+
+    :param avg:
+    :param box:
+    :return:
+    """
     import random
     height, width = box
     x, y = avg
@@ -346,6 +402,11 @@ def get_random_xy(avg, box):
 
 
 def generate_random_string(length=8):
+    """
+
+    :param length:
+    :return:
+    """
     import random
     import string
     characters = string.ascii_letters + string.digits
@@ -354,10 +415,19 @@ def generate_random_string(length=8):
 
 
 def generate_current_time_name():
+    """
+
+    :return:
+    """
     return t.strftime(DataFormat.ONLY_TIME.value, t.localtime())
 
 
 def run(build: [Build], script_tasks: list[BuildTaskArgs]):
+    """
+
+    :param build:
+    :param script_tasks:
+    """
     processor = init_execute_processor()
     tasks = []
     if GUARD:
@@ -372,6 +442,9 @@ def run(build: [Build], script_tasks: list[BuildTaskArgs]):
 
 
 class ScreenExecute(object):
+    """
+
+    """
     def __init__(self, region, task_loop, task_args: BuildTaskArgs):
 
         self.mss = mss.mss()  # 截图
@@ -383,9 +456,16 @@ class ScreenExecute(object):
         self.retry_count = RETRYCOUNT
 
     def screenshot(self):
+        """
+
+        :return:
+        """
         return np.array(self.mss.grab(self.region))
 
     def execute(self):
+        """
+
+        """
         dag = self.task_args.dag
         # 双端队列 插入在队尾
         q = deque()
@@ -397,6 +477,12 @@ class ScreenExecute(object):
             self.do_execute(q=q, nodes=nodes)
 
     def do_execute(self, q, nodes: list[ScriptArgs]):
+        """
+
+        :param q:
+        :param nodes:
+        :return:
+        """
         # 批量处理
         if self.cycle == 0:
             return
@@ -442,6 +528,13 @@ class ScreenExecute(object):
                 logger.warning(f"🙃🙃🙃{self.cycle}秒没有匹配到任何目标，{[str(x) for x in nodes]}")
 
     def retry(self, match_rule, strategy, count):
+        """
+
+        :param match_rule:
+        :param strategy:
+        :param count:
+        :return:
+        """
         if count > self.retry_count:
             logger.warning(f'重试次数已经达到{self.retry_count}')
             return
@@ -467,7 +560,12 @@ class ScreenExecute(object):
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
+        """
 
+        :param match_rule:
+        :param screenshot:
+        :return:
+        """
         match type(match_rule):
             case MatchRule.Template:
                 """模板匹配"""
@@ -490,6 +588,12 @@ class ScreenExecute(object):
                 """ocr"""
 
     def execute_strategy(self, strategy, min_loc, box):
+        """
+
+        :param strategy:
+        :param min_loc:
+        :param box:
+        """
         match type(strategy):
             case Strategy.ClickStrategy:
                 point = get_xy(strategy, min_loc, box)
@@ -501,6 +605,11 @@ class ScreenExecute(object):
                 logger.info(f'')
 
     def is_click(self, match_rule):
+        """
+
+        :param match_rule:
+        :return:
+        """
         try:
             self.execute_match_rule(match_rule=match_rule, screenshot=np.array(self.mss.grab(self.region)))
         except exception.NOT_FIND_EXCEPTION as e:
@@ -510,6 +619,9 @@ class ScreenExecute(object):
 
 
 class VideoExecute(object):
+    """
+
+    """
     def __init__(self, region, task_loop: int, task_args: BuildTaskArgs):
         self.mss = mss.mss()  # 截图
         self.region = region  # 监视区域
@@ -520,14 +632,26 @@ class VideoExecute(object):
         self.cycle = len(task_args.nodes) * RETRYTIME  # 用来进行筛选
 
     def screenshot(self):
+        """
+
+        :return:
+        """
         return np.array(self.mss.grab(self.region))
 
     def execute(self):
+        """
+
+        """
         nodes = self.task_args.nodes
         logger.info(f'监视{self.task_args.win_title}任务开始,运作参数{[str(x) for x in nodes]}')
         self.do_execute(nodes)
 
     def do_execute(self, nodes: set[ScriptArgs]):
+        """
+
+        :param nodes:
+        :return:
+        """
         # 批量处理
         if self.cycle == 0:
             return
@@ -549,12 +673,21 @@ class VideoExecute(object):
                 length = len(new_nodes)
 
     def filter_nodes(self, nodes: set[ScriptArgs]):
+        """
+
+        :param nodes:
+        :return:
+        """
         start_time = now()
         while now() - start_time < self.cycle:
             self.execute_nodes(nodes=nodes)
         return set(filter(lambda x: x.fail_count >= 0, nodes))
 
     def execute_nodes(self, nodes: set[ScriptArgs]):
+        """
+
+        :param nodes:
+        """
         for node in nodes:
             img = self.screenshot()
             try:
@@ -582,6 +715,13 @@ class VideoExecute(object):
                 continue
 
     def retry(self, match_rule, strategy, count):
+        """
+
+        :param match_rule:
+        :param strategy:
+        :param count:
+        :return:
+        """
         if count > self.retry_count:
             logger.warning(f'重试次数已经达到{self.retry_count}')
             return
@@ -606,7 +746,12 @@ class VideoExecute(object):
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
+        """
 
+        :param match_rule:
+        :param screenshot:
+        :return:
+        """
         match type(match_rule):
             case MatchRule.Template:
                 """模板匹配"""
@@ -630,6 +775,12 @@ class VideoExecute(object):
                 """ocr"""
 
     def execute_strategy(self, strategy, min_loc, box):
+        """
+
+        :param strategy:
+        :param min_loc:
+        :param box:
+        """
         match type(strategy):
             case Strategy.ClickStrategy:
                 point = get_xy(strategy, min_loc, box)
@@ -640,6 +791,11 @@ class VideoExecute(object):
                 logger.info(f'')
 
     def is_click(self, match_rule):
+        """
+
+        :param match_rule:
+        :return:
+        """
         img = self.screenshot()
         try:
             self.execute_match_rule(match_rule=match_rule, screenshot=img)
@@ -658,6 +814,11 @@ class asyn_queue(object):
         self.mss = mss.mss()  # 截图
 
     def put(self, path, region):
+        """
+
+        :param path:
+        :param region:
+        """
         self.queue.put(item=(path, region))
 
     def run(self):

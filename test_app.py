@@ -12,7 +12,7 @@ logger = get_logger()
 
 def main():
     # 加载 YAML 文件
-    with open("task.yml", "r") as f:
+    with open("task.yml",) as f:
         args_list = yaml.load(f, Loader=yaml.FullLoader)["tasks"]
     build = Build()
     tasks = []

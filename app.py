@@ -8,26 +8,8 @@ logger = get_logger()
 
 
 def main():
-    a1 = ScriptArgs(task_name="式神录", strategy=Strategy.ClickStrategy(Policy.CENTER),
-                    match_rule=MatchRule().template(img_name.test_1))
-    a2 = ScriptArgs(task_name="返回", strategy=Strategy.ClickStrategy(Policy.CENTER),
-                    match_rule=MatchRule().template(img_name.test_2))
-    #
-    # a3 = ScriptArgs(task_name="结算", strategy=ClickStrategy(Strategy.CENTER),
-    #                 match_rule=MatchRule().template("settle"))
-    # a4 = ScriptArgs(task_name="结束", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("end"))
-    build = Build()
-    task = build.BuildTaskArgs("主账号")
-    task.add_nodes({a1, a2})
-    task.add_edge(a1, a2)
-    task.build()
-
-    run(build=build, script_tasks=[task])
-
-
-def main():
     # 加载 YAML 文件
-    with open("task.yml", "r") as f:
+    with open("task.yml", encoding='utf-8') as f:
         args_list = yaml.load(f, Loader=yaml.FullLoader)["tasks"]
     build = Build()
     tasks = []
@@ -35,18 +17,24 @@ def main():
     for args_dict in args_list:
         pool_name = args_dict['task']
         task_loop = 0
-        if args_dict.get('task_loop'):
-            task_loop = args_dict['task_loop']
+        if args_dict.get('taskloop'):
+            task_loop = args_dict['taskloop']
         _nodes, _edges = parse(nodes=args_dict['nodes'])
         task = build.BuildTaskArgs(win_title=pool_name, task_loop=task_loop)
         task.add_nodes(_nodes)
         task.add_edges(_edges)
         task.build()
         tasks.append(task)
-    print(build, tasks)
+
+    run(build=build, script_tasks=tasks)
 
 
 def parse(nodes):
+    """
+
+    :param nodes:
+    :return:
+    """
     _nodes = set()
     _edges = set()
 
@@ -66,6 +54,11 @@ def parse(nodes):
 
 
 def parse_node(node):
+    """
+
+    :param node:
+    :return:
+    """
     node_name = node['node']
     strategy = parse_match_rule(node['match_rule'])
     match_rule = parse_strategy(node['strategy'])
@@ -74,6 +67,11 @@ def parse_node(node):
 
 
 def parse_strategy(strategy):
+    """
+
+    :param strategy:
+    :return:
+    """
     res = None
     match strategy['type']:
         case "ClickStrategy":
@@ -96,6 +94,11 @@ def parse_strategy(strategy):
 
 
 def parse_match_rule(match_rule):
+    """
+
+    :param match_rule:
+    :return:
+    """
     res = None
     match match_rule['type']:
         case "template":
@@ -116,6 +119,11 @@ def parse_match_rule(match_rule):
 
 
 def parse_button(button: str):
+    """
+
+    :param button:
+    :return:
+    """
     match button:
         case 'left':
             return Button.LEFT

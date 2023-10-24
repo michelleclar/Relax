@@ -13,7 +13,7 @@
 
 | 库名              | 作用                                    |
 |:----------------|:--------------------------------------|
-| ~~pyautogui~~       | 屏幕自动化控制库,用于获取屏幕截图等                    |
+| ~~pyautogui~~   | 屏幕自动化控制库,用于获取屏幕截图等                    |
 | opencv-python   | OpenCV计算机视觉库的Python接口,用于图片处理和裁剪       |
 | numpy           | Python科学计算库,用于矩阵运算和算法                 |
 | paddlepaddle    | PaddlePaddle深度学习框架,提供深度学习功能           |
@@ -22,8 +22,8 @@
 | loguru          | 日志框架                                  |
 | memory_profiler | 内存分析工具                                |
 | mss             | 高性能截图工具                               |
-|pymouse|高性能操作鼠标库|
-|pykeyboard|高性能键盘操作库|
+| pymouse         | 高性能操作鼠标库                              |
+| pykeyboard      | 高性能键盘操作库                              |
 
 >
 paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/quickstart.md#2)
@@ -31,21 +31,32 @@ paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[
 > 本项目导入的是cpu版本
 
 ### 项目环境
+
 #### 依赖
+
 > python(目前版本<=3.10即可)
 > 主要影响因素在百度的ocr上 最高支持10后面打算将这个功能拆分出去 不能让他影响主项目
+
 #### 实际开发环境
+
 > conda 创建的虚拟环境 python版本使用 3.10
 > linux 和 win 平台
 > 开发工具 neovide pycharm
+
 ### 使用方式
-```sh
-pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
-```
-1. 编写config.ymal 进行参数设置
-2. 编写task.ymal 进行任务设置
-3. 运行app.py
+
+> 1. ```sh
+>    pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+>    ```
+>
+> 2. 编写[config.ymal](./doc/config.md) 进行参数设置
+>
+> 3. 编写[task.ymal](./doc/task.md) 进行任务设置
+>
+> 4. 运行app.py
+
 ### 注意事项
+
 > 百度OCR
 > GPU版本需要安装CUDA
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
