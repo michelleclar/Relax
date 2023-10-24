@@ -573,7 +573,7 @@ class VideoExecute(object):
                 continue
             except Exception as e:
                 # 未知力量影响将图片进行保存
-                path = f'./imgs/unknown/{generate_current_time_name(format=DataFormat.ONLY_TIME)}.png'
+                path = f'./imgs/unknown/{generate_current_time_name()}.png'
                 # TODO 挑选一个图标
                 logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
                 cv.save_img(path=path, img=img)
