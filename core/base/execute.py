@@ -34,8 +34,6 @@ def init_execute_processor():
         global RETRYTIME
         # 疑似点击失败 重试次数
         global RETRYCOUNT
-        # 运行次数
-        global TASKLOOP
         # 监控
         global MONITOR
 
@@ -47,7 +45,6 @@ def init_execute_processor():
 
         RETRYTIME = execute_consts['RetryTime']
         RETRYCOUNT = execute_consts['RetryCount']
-        TASKLOOP = execute_consts['TaskLoop']
         MONITOR = execute_consts['Monitor']
 
         switch_consts = ayml["switch"]
@@ -55,7 +52,7 @@ def init_execute_processor():
         GUARD = switch_consts["Guard"]
     logger.info(f'配置内容为{ayml}')
 
-    return Execute(retry_time=RETRYTIME, retry_count=RETRYCOUNT, task_loop=TASKLOOP, monitor=MONITOR)
+    return Execute(retry_time=RETRYTIME, retry_count=RETRYCOUNT, monitor=MONITOR)
 
 
 # ===========================================================
@@ -277,11 +274,10 @@ now = lambda: t.time()
 class Execute(object):
     """运行构建器构建的参数"""
 
-    def __init__(self, retry_time, retry_count, task_loop, monitor):
+    def __init__(self, retry_time, retry_count, monitor):
         # 任务循环次数
         self.retry_time = retry_time
         self.retry_count = retry_count
-        self.task_loop = task_loop
         self.monitor = monitor
         self.pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix='')
 
@@ -294,19 +290,6 @@ class Execute(object):
             case _:
                 logger.error(f'不支持此类型：{task_type}')
 
-    def do_screenshot(self, region, screenshot_path: str):
-        """截图操作,后续可能会处理成流"""
-        simulate.do_screenshot(screenshot_path, region)
-        return cv.imread(screenshot_path)
-
-    def init_screenshot(self, win_title: str):
-        """截图预热"""
-        screenshot_name = "screenshot" + generate_random_string(4)
-        # 进行区域处理
-        region = simulate.get_region_by_title(win_title)
-        screenshot_path = f"./imgs/screenshot/{screenshot_name}.png"
-        return region, screenshot_path
-
     # TODO 将这个执行转化成类 用来方便参数传递 
     def execute_task_args(self, task: BuildTaskArgs):
         region = simulate.get_region_by_title(task.win_title)
@@ -317,13 +300,7 @@ class Execute(object):
                 ScreenExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
             case "video":
                 # 视频流监控
-                self.video_execute(task)
-                VideoExecute
-                pass
-
-    def video_execute(self, task):
-        pass
-
+                VideoExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
 
 # 得到中点坐标
 def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
@@ -392,7 +369,6 @@ def run(build: [Build], script_tasks: list[BuildTaskArgs]):
         t.sleep(1)
     wait(tasks)
 
-
 class ScreenExecute(object):
     def __init__(self, region, task_loop, task_args: BuildTaskArgs):
 
@@ -446,7 +422,7 @@ class ScreenExecute(object):
                         continue
                     except Exception as e:
                         # 未知力量影响将图片进行保存
-                        path = f'./imgs/unknown/{generate_current_time_name(format=DataFormat.ONLY_TIME)}.png'
+                        path = f'./imgs/unknown/{generate_current_time_name()}.png'
                         # TODO 挑选一个图标
                         logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
                         cv.save_img(path=path, img=img)
@@ -668,5 +644,4 @@ class VideoExecute(object):
             self.execute_match_rule(match_rule=match_rule, screenshot=img)
         except exception.NOT_FIND_EXCEPTION as e:
             return True
-
         raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")

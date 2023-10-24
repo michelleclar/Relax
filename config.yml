@@ -7,8 +7,6 @@ switch:
 execute:
   # 任务重试时间
   RetryTime: 30
-  # 任务循环次数
-  TaskLoop: 0
   # 任务失败重试次数
   RetryCount: 10
   # 如果节点匹配失败次数超过指定次将会将该节点删除

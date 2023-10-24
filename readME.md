@@ -30,40 +30,24 @@ paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[
 >
 > 本项目导入的是cpu版本
 
-### 项目环境搭建
-
-> ~~python版本 3.8~~
-> python版本 3.10
+### 项目环境
+#### 依赖
+> python(目前版本<=3.10即可)
 > 主要影响因素在百度的ocr上 最高支持10后面打算将这个功能拆分出去 不能让他影响主项目
-
+#### 实际开发环境
+> conda 创建的虚拟环境 python版本使用 3.10
+> linux 和 win 平台
+> 开发工具 neovide pycharm
+### 使用方式
 ```sh
 pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 ```
-
+1. 编写config.ymal 进行参数设置
+2. 编写task.ymal 进行任务设置
+3. 运行app.py
+### 注意事项
+> 百度OCR
 > GPU版本需要安装CUDA
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
 > 等以后出一个CUDA管理工具才会考虑
-> paddlepaddle-gpu
-- [x] 根据视窗标题进行区域监视
-- [x] 通过config.ymal进行程序配置
-- [x] 通过task.yml 进行运行设置
-- [] ocr
-```yml
-# 功能开关
-switch:
-  Debug: false
-  # 守护线程 如果启动这个线程会一直保持你的视窗可见
-  Guard: false
-# 执行参数
-execute:
-  # 任务重试时间
-  RetryTime: 30
-  # 任务循环次数
-  TaskLoop: 0
-  # 任务失败重试次数
-  RetryCount: 10
-  # 如果节点匹配失败次数超过指定次将会将该节点删除
-  FailCount: 100
-  # 视频流监控：video 屏幕监控：screen
-  Monitor: screen
-```
+> 如要使用GPU版本 安装paddlepaddle-gpu
