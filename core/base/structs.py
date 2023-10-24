@@ -40,7 +40,6 @@ class DAG(object):
 
     def delete_node(self, node_name, graph=None):
         """
-        Deletes this node and all edges referencing it.
         删除此节点和引用它的所有边
         """
         if not graph:
@@ -221,7 +220,8 @@ class DAG(object):
 
         while ready:
             u = ready.pop()
-            result.append(f'{str(u)}')
+            result.append(u)
+            # result.append(f'{str(u)}')
             for v in graph[u]:
                 in_degree[v] -= 1
                 if in_degree[v] == 0:
@@ -256,16 +256,25 @@ class DAG(object):
 class OFFSET(Structure):
     _fields_ = [("x", c_long),
                 ("y", c_long)]
+    def __str__(self):
+        return f'OFFSET(x={self.x}, y={self.y})'
 
 
 class POINT(Structure):
     _fields_ = [("x", c_long),
                 ("y", c_long)]
 
+    def __str__(self):
+        return f'POINT(x={self.x}, y={self.y})'
+
 
 class BOX(Structure):
     _fields_ = [("height", c_long),
-                ("width",c_long)]
+                ("width", c_long)]
+    def __str__(self):
+        return f'BOX(height={self.height}, width={self.width})'
+
+
 class Stack(object):
     def __init__(self, size=10):
         self.S = []

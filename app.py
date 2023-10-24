@@ -34,8 +34,11 @@ def main():
     # 构建 ScriptArgs 对象
     for args_dict in args_list:
         pool_name = args_dict['task']
-        _nodes, _edges = parse(args_dict['nodes'])
-        task = build.BuildTaskArgs(pool_name)
+        task_loop = 0
+        if args_dict.get('task_loop'):
+            task_loop = args_dict['task_loop']
+        _nodes, _edges = parse(nodes=args_dict['nodes'])
+        task = build.BuildTaskArgs(win_title=pool_name, task_loop=task_loop)
         task.add_nodes(_nodes)
         task.add_edges(_edges)
         task.build()

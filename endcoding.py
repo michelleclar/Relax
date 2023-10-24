@@ -7,7 +7,7 @@ def main():
         # 读取文件内容
         content = f.read()
         # 解码文件内容
-        content = content.decode("cp936")
+        content = content.decode("gbk")
         # 编码为 UTF-8
         content = content.encode("utf-8")
 

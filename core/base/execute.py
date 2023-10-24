@@ -8,23 +8,21 @@ from enum import Enum
 from commons import exception
 from core.base import cv, simulate, log
 from core.base.structs import DAG, OFFSET, POINT, BOX
+from commons.utils.format import DataFormat
 
 # 执行方法
 logger = log.get_logger()
-execute = None
 
 # 重试时间
-RETRYTIME = None
+RETRYTIME = 10
 # 疑似点击失败 重试次数
-RETRYCOUNT = None
-# 运行次数
-TASKLOOP = None
+RETRYCOUNT = 3
 # 监控
 MONITOR = None
 
-DEBUG = None
+DEBUG = False
 
-GUARD = None
+GUARD = False
 POOL = ThreadPoolExecutor(max_workers=10)
 
 
@@ -69,7 +67,6 @@ Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 # 整体参数结构设计
 # 匹配规则   枚举值，ocr匹配:需要有匹配的文字参数 模板匹配:需要模板图片名字
 # 点击事件名，点击事件
-
 # 脚本运行参数 点击事件名（元组：事件名，枚举值：中心，随即，不点击匹配位置） 匹配规则（单独参数）是否启用防检测机制
 class MatchRule(object):
     """
@@ -146,6 +143,9 @@ class ScriptArgs(object):
         self.task_name = task_name
         self.match_rule = match_rule
         self.strategy = strategy
+        self.is_match = False
+        self.fail_count = 0  # 失败次数
+        self.time = -1  # 上一步到此步骤的时间
         if weight is not None:
             self.weight = weight
         else:
@@ -172,9 +172,9 @@ class Build(object):
 
     """通用构建器"""
 
-    def BuildTaskArgs(self, win_title: str):
+    def BuildTaskArgs(self, win_title: str, task_loop: int):
         self.win_titles.add(win_title)
-        return BuildTaskArgs(win_title=win_title)
+        return BuildTaskArgs(win_title=win_title, task_loop=task_loop)
 
 
 class BuildTaskArgs(object):
@@ -313,12 +313,12 @@ class Execute(object):
         match self.monitor:
             case "screen":
                 # 不开启视频流监控 采用截图方式 响应相对较慢
-                self.screen_execute(task)
                 # TODO 在BuildTaskArgs 加入 task_loop 属性
                 ScreenExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
             case "video":
                 # 视频流监控
                 self.video_execute(task)
+                VideoExecute
                 pass
 
     def video_execute(self, task):
@@ -339,9 +339,10 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
         case Policy.WITHOUT:
             # 匹配之外的点
             pass
-    # TODO 进行随机点偏移
+    # TODO 进行偏移
     point.x += strategy.offset.x
     point.y += strategy.offset.y
+
     return point
 
 
@@ -374,6 +375,10 @@ def generate_random_string(length=8):
     return random_string
 
 
+def generate_current_time_name():
+    return t.strftime(DataFormat.ONLY_TIME.value, t.localtime())
+
+
 def run(build: [Build], script_tasks: list[BuildTaskArgs]):
     processor = init_execute_processor()
     tasks = []
@@ -389,72 +394,98 @@ def run(build: [Build], script_tasks: list[BuildTaskArgs]):
 
 
 class ScreenExecute(object):
-    def __init__(self, region, task_loop, task_args):
+    def __init__(self, region, task_loop, task_args: BuildTaskArgs):
+
         self.mss = mss.mss()  # 截图
         self.region = region  # 监视区域
         self.retry_time = RETRYTIME  # 重试时间
         self.task_loop = task_loop  # 循环次数
         self.task_args = task_args  # 运行参数
+        self.cycle = len(task_args.nodes) * RETRYTIME  # 用来进行筛选
         self.retry_count = RETRYCOUNT
+
+    def screenshot(self):
+        return np.array(self.mss.grab(self.region))
 
     def execute(self):
         dag = self.task_args.dag
         # 双端队列 插入在队尾
         q = deque()
-
         q.append(dag.ind_nodes())
+        # TODO任务开始选择一个符号用于日志观察
+        logger.info(f'监视{self.task_args.win_title}任务开始')
         while q.__len__() != 0:
             nodes = q.pop()
-            start_time = now()
-            # TODO进行拆分
-            flag = False
-            while now() - start_time < self.retry_time:
-                scrreenshot = np.array(self.mss.grab(self.region))
-                self.do_execute(q=q, nodes=nodes, screenshot=scrreenshot)
+            self.do_execute(q=q, nodes=nodes)
 
-    def do_execute(self, q, nodes: list[ScriptArgs], screenshot):
+    def do_execute(self, q, nodes: list[ScriptArgs]):
         # 批量处理
-        for node in nodes:
+        if self.cycle == 0:
+            return
 
-            try:
-                box, min_loc = self.execute_match_rule(match_rule=node.match_rule, screenshot=screenshot)  # 匹配
-                self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
-                # TODO 进行是否点击校验
-                self.is_click(node.match_rule)
-            except exception.NOT_FIND_EXCEPTION as e:
-                logger.warning(e)
-                t.sleep(1)
-                continue
-            except exception.NOT_CLICK_EXCEPTION as e:
-                logger.warning(f"{e},retry")
-                # TODO重试
-                count = 0
-                self.retry(match_rule=node.match_rule, strategy=node.strategy, count=count)
-                continue
-            except Exception as e:
-                logger.error(f"😭😭😭{log.detail_error()}")
-                continue
-            down = self.task_args.dag.downstream(node)
-            if len(down) != 0:
-                q.append(down)
-
-        else:
-            # Max retries exceeded, raise an exception or handle it as needed
-            logger.warning(f"🙃🙃🙃{self.retry_time}秒点击失败：{str(node)}")
+        flag = False
+        for i in range(self.task_loop):
+            start_time = now()
+            while now() - start_time < self.cycle:
+                for node in nodes:
+                    img = self.screenshot()
+                    try:
+                        box, min_loc = self.execute_match_rule(match_rule=node.match_rule, screenshot=img)  # 匹配
+                        self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
+                        self.is_click(node.match_rule)
+                        flag = True
+                    except exception.NOT_FIND_EXCEPTION as e:
+                        logger.warning(f'{e},当前置性度:{node.match_rule.threshold}')
+                        t.sleep(1)
+                        continue
+                    except exception.NOT_CLICK_EXCEPTION as e:
+                        path = f'./imgs/not_click/{generate_current_time_name()}.png'
+                        cv.save_img(path=path, img=img)
+                        logger.warning(f"{e},retry,path：{path}")
+                        self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
+                        continue
+                    except Exception as e:
+                        # 未知力量影响将图片进行保存
+                        path = f'./imgs/unknown/{generate_current_time_name(format=DataFormat.ONLY_TIME)}.png'
+                        # TODO 挑选一个图标
+                        logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
+                        cv.save_img(path=path, img=img)
+                        continue
+                    down = self.task_args.dag.downstream(node)
+                    if len(down) != 0:
+                        q.append(down)
+                    break
+                if flag:
+                    break
+            else:
+                # 全屏进行截图
+                path = f'./imgs/cycle/{generate_current_time_name()}.png'
+                self.mss.shot(mon=-1, output=path)
+                logger.warning(f"🙃🙃🙃{self.cycle}秒没有匹配到任何目标，{[str(x) for x in nodes]}")
 
     def retry(self, match_rule, strategy, count):
         if count > self.retry_count:
+            logger.warning(f'重试次数已经达到{self.retry_count}')
             return
+        img = self.screenshot()
         try:
             box, min_loc = self.execute_match_rule(match_rule=match_rule,
-                                                   screenshot=np.array(self.mss.grab(self.region)))
+                                                   screenshot=img)
             self.execute_strategy(strategy=strategy, box=box, min_loc=min_loc)
             self.is_click(match_rule=match_rule)
         except exception.NOT_FIND_EXCEPTION as e:
             # 表示没有找到 不在进行重试
+            name = f'{generate_current_time_name()}.png'
+            path = f'./imgs/not_click/{name}'
+            logger.warning(f'{e}')
+            cv.save_img(path=path, img=img)
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
+            name = f'{generate_current_time_name()}.png'
+            path = f'./imgs/not_click/{name}'
+            logger.warning(f'重试次数{count},图片保存名称为{name}')
+            cv.save_img(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
@@ -469,7 +500,9 @@ class ScreenExecute(object):
                 if threshold > match_rule.threshold:
                     # 匹配成功
                     height, width = template.shape[:2]
-                    return BOX(height=height, width=width), min_loc
+                    box = BOX(height=height, width=width)
+                    cv.rectangle(target=screenshot, min_loc=min_loc, box=box)
+                    return box, min_loc
                 else:
                     # 匹配失败 retry
                     raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name},retry")
@@ -483,15 +516,157 @@ class ScreenExecute(object):
             case Strategy.ClickStrategy:
                 point = get_xy(strategy, min_loc, box)
                 simulate.click(point, strategy.button.value)
-
+                logger.info(f'🖱️🖱️🖱️点击坐标：偏移后：{point}，偏移量：{strategy.offset}')
             case Strategy.InputKeyStrategy:
                 simulate.send_keys()
+                # 输入按键
+                logger.info(f'')
 
     def is_click(self, match_rule):
         try:
             self.execute_match_rule(match_rule=match_rule, screenshot=np.array(self.mss.grab(self.region)))
         except exception.NOT_FIND_EXCEPTION as e:
-            # 表示已经点击
             return True
 
         raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐没有点击{match_rule.template_name}")
+
+
+class VideoExecute(object):
+    def __init__(self, region, task_loop: int, task_args: BuildTaskArgs):
+        self.mss = mss.mss()  # 截图
+        self.region = region  # 监视区域
+        self.retry_time = RETRYTIME  # 重试时间
+        self.task_loop = task_loop  # 循环次数
+        self.task_args = task_args  # 运行参数
+        self.retry_count = RETRYCOUNT  # 重试次数
+        self.cycle = len(task_args.nodes) * RETRYTIME  # 用来进行筛选
+
+    def screenshot(self):
+        return np.array(self.mss.grab(self.region))
+
+    def execute(self):
+        nodes = self.task_args.nodes
+        logger.info(f'监视{self.task_args.win_title}任务开始,运作参数{[str(x) for x in nodes]}')
+        self.do_execute(nodes)
+
+    def do_execute(self, nodes: set[ScriptArgs]):
+        # 批量处理
+        if self.cycle == 0:
+            return
+        new_nodes = self.filter_nodes(nodes)
+        length = len(new_nodes)
+        count = 0
+        for i in range(self.task_loop):
+            temp = set()
+            start = now()
+            self.execute_nodes(nodes=nodes)
+            if length != len(temp):
+                count += 1
+                # 全屏进行截图
+                path = f'./imgs/cycle/{generate_current_time_name()}.png'
+                self.mss.shot(mon=-1, output=path)
+                logger.warning(f'{now() - start}时间内没有匹配任何目标,图片保存路径{path}')
+            if count > 10:
+                new_nodes = self.filter_nodes(new_nodes)
+                length = len(new_nodes)
+
+    def filter_nodes(self, nodes: set[ScriptArgs]):
+        start_time = now()
+        while now() - start_time < self.cycle:
+            self.execute_nodes(nodes=nodes)
+        return set(filter(lambda x: x.fail_count >= 0, nodes))
+
+    def execute_nodes(self, nodes: set[ScriptArgs]):
+        for node in nodes:
+            img = self.screenshot()
+            try:
+                box, min_loc = self.execute_match_rule(match_rule=node.match_rule,
+                                                       screenshot=img)  # 匹配
+                self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
+                self.is_click(node.match_rule)
+                node.fail_count -= 1
+            except exception.NOT_FIND_EXCEPTION as e:
+                logger.warning(f'{e},当前置性度:{node.match_rule.threshold}')
+                continue
+            except exception.NOT_CLICK_EXCEPTION as e:
+                # 未知力量影响 将图片进行保存
+                path = f'./imgs/not_click/{generate_current_time_name()}.png'
+                cv.save_img(path=path, img=img)
+                logger.warning(f"{e},retry,path：{path}")
+                self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
+                continue
+            except Exception as e:
+                # 未知力量影响将图片进行保存
+                path = f'./imgs/unknown/{generate_current_time_name(format=DataFormat.ONLY_TIME)}.png'
+                # TODO 挑选一个图标
+                logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
+                cv.save_img(path=path, img=img)
+                continue
+
+    def retry(self, match_rule, strategy, count):
+        if count > self.retry_count:
+            logger.warning(f'重试次数已经达到{self.retry_count}')
+            return
+        img = self.screenshot()
+        try:
+            box, min_loc = self.execute_match_rule(match_rule=match_rule,
+                                                   screenshot=img)
+            self.execute_strategy(strategy=strategy, box=box, min_loc=min_loc)
+            self.is_click(match_rule=match_rule)
+        except exception.NOT_FIND_EXCEPTION as e:
+            # 表示没有找到 不在进行重试
+            name = f'{generate_current_time_name()}.png'
+            path = f'./imgs/not_click/{name}'
+            logger.warning(f'{e}')
+            cv.save_img(path=path, img=img)
+            return
+        except exception.NOT_CLICK_EXCEPTION as e:
+            count += 1
+            name = f'{generate_current_time_name()}.png'
+            path = f'./imgs/not_click/{name}'
+            logger.warning(f'重试次数{count},图片保存名称为{name}')
+            cv.save_img(path=path, img=img)
+            self.retry(match_rule=match_rule, strategy=strategy, count=count)
+
+    def execute_match_rule(self, match_rule, screenshot):
+
+        match type(match_rule):
+            case MatchRule.Template:
+                """模板匹配"""
+
+                template = cv.cache_imread(f"./imgs/{match_rule.template_name}.png")
+
+                threshold, min_loc = cv.do_match(screenshot, template)
+
+                if threshold > match_rule.threshold:
+                    # 匹配成功
+                    height, width = template.shape[:2]
+                    box = BOX(height=height, width=width)
+                    cv.rectangle(target=screenshot, min_loc=min_loc, box=box)
+                    return box, min_loc
+                else:
+                    # 匹配失败 retry
+                    raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name}")
+            case MatchRule.Ocr:
+                # Ocr
+                pass
+                """ocr"""
+
+    def execute_strategy(self, strategy, min_loc, box):
+        match type(strategy):
+            case Strategy.ClickStrategy:
+                point = get_xy(strategy, min_loc, box)
+                simulate.click(point, strategy.button.value)
+                logger.info(f'🖱️🖱️🖱️点击坐标：偏移后：{point}，偏移量：{strategy.offset}')
+            case Strategy.InputKeyStrategy:
+                simulate.send_keys()
+                logger.info(f'')
+
+    def is_click(self, match_rule):
+        img = self.screenshot()
+        try:
+            self.execute_match_rule(match_rule=match_rule, screenshot=img)
+        except exception.NOT_FIND_EXCEPTION as e:
+            return True
+
+        raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")

@@ -19,8 +19,11 @@ def main():
     # 构建 ScriptArgs 对象
     for args_dict in args_list:
         pool_name = args_dict['task']
+        task_loop = 0
+        if args_dict['task_loop']:
+            task_loop = args_dict['task_loop']
         _nodes, _edges = parse(args_dict['nodes'])
-        task = build.BuildTaskArgs(pool_name)
+        task = build.BuildTaskArgs(win_title=pool_name, task_loop=task_loop)
         task.add_nodes(_nodes)
         task.add_edges(_edges)
         task.build()
@@ -46,14 +49,12 @@ def parse(nodes):
     parse_nodes(nodes)
     return _nodes, _edges
 
-
 def parse_node(node):
     node_name = node['node']
     strategy = parse_match_rule(node['match_rule'])
     match_rule = parse_strategy(node['strategy'])
     return ScriptArgs(task_name=node_name, strategy=strategy,
                       match_rule=match_rule)
-
 
 def parse_strategy(strategy):
     res = None

@@ -2,20 +2,21 @@ import threading
 import time
 from collections import deque
 
-from core.base.execute import Build, ScriptArgs, MatchRule, Strategy
-from core.base.structs import DAG
+from core.base.execute import Build, ScriptArgs, MatchRule, Strategy, Policy
+from core.base.structs import POINT
 import cv2
 
 
 def test_deque():
-    a1 = ScriptArgs(task_name="开始", strategy=ClickStrategy(Strategy.CENTER),
+    a1 = ScriptArgs(task_name="开始", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("action"))
-    a2 = ScriptArgs(task_name="失败", strategy=ClickStrategy(Strategy.CENTER),
+    a2 = ScriptArgs(task_name="失败", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("failed"))
 
-    a3 = ScriptArgs(task_name="结算", strategy=ClickStrategy(Strategy.CENTER),
+    a3 = ScriptArgs(task_name="结算", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("settle"))
-    a4 = ScriptArgs(task_name="结束", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("end"))
+    a4 = ScriptArgs(task_name="结束", strategy=Strategy.ClickStrategy(Strategy.CENTER),
+                    match_rule=MatchRule().template("end"))
     task = Build().BuildTaskArgs("aaa")
     task.add_nodes({a1, a2, a3, a4})
     task.add_edge(a1, a2)
@@ -94,14 +95,15 @@ def test_thread_poll():
 
 
 def test_autpjmp():
-    a1 = ScriptArgs(task_name="开始", strategy=ClickStrategy(Strategy.CENTER),
+    a1 = ScriptArgs(task_name="开始", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("action"))
-    a2 = ScriptArgs(task_name="失败", strategy=ClickStrategy(Strategy.CENTER),
+    a2 = ScriptArgs(task_name="失败", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("failed"))
 
-    a3 = ScriptArgs(task_name="结算", strategy=ClickStrategy(Strategy.CENTER),
+    a3 = ScriptArgs(task_name="结算", strategy=Strategy.ClickStrategy(Strategy.CENTER),
                     match_rule=MatchRule().template("settle"))
-    a4 = ScriptArgs(task_name="结束", strategy=ClickStrategy(Strategy.CENTER), match_rule=MatchRule().template("end"))
+    a4 = ScriptArgs(task_name="结束", strategy=Strategy.ClickStrategy(Strategy.CENTER),
+                    match_rule=MatchRule().template("end"))
     task = Build().BuildTaskArgs("aaa")
     task.add_nodes({a1, a2, a3, a4})
     task.add_edge(a1, a2)
@@ -142,6 +144,34 @@ def test_match():
             print(2)
 
 
-if __name__ == '__main__':
+def test_dag():
+    a1 = ScriptArgs(task_name="开始", strategy=Strategy.ClickStrategy(Policy.CENTER),
+                    match_rule=MatchRule().template("action"))
+    a2 = ScriptArgs(task_name="失败", strategy=Strategy.ClickStrategy(Policy.CENTER),
+                    match_rule=MatchRule().template("failed"))
 
-    test_match()
+    a3 = ScriptArgs(task_name="结算", strategy=Strategy.ClickStrategy(Policy.CENTER),
+                    match_rule=MatchRule().template("settle"))
+    a4 = ScriptArgs(task_name="结束", strategy=Strategy.ClickStrategy(Policy.CENTER),
+                    match_rule=MatchRule().template("end"))
+    task = Build().BuildTaskArgs(win_title="aaa",task_loop=10)
+    task.add_nodes({a1, a2, a3, a4})
+    task.add_edge(a1, a2)
+    task.add_edge(a1, a3)
+    task.add_edge(a3, a4)
+    task.build()
+    dag = task.dag
+    r1 = dag.ind_nodes()
+    r2 = dag.all_leaves()
+    r3 = dag.all_downstreams(a1)
+    print([str(x) for x in task.nodes])
+    print("======")
+
+def test_struct():
+    p = POINT(x=1,y=1)
+    p.x += 1
+    p.y += 1
+    print(p)
+
+if __name__ == '__main__':
+    test_struct()

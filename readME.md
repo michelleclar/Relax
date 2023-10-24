@@ -44,7 +44,10 @@ pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web
 > 官方推荐是CUDA 10 到11.1 太低了 所以不打算采用GPU
 > 等以后出一个CUDA管理工具才会考虑
 > paddlepaddle-gpu
-
+- [x] 根据视窗标题进行区域监视
+- [x] 通过config.ymal进行程序配置
+- [x] 通过task.yml 进行运行设置
+- [] ocr
 ```yml
 # 功能开关
 switch:
@@ -63,7 +66,4 @@ execute:
   FailCount: 100
   # 视频流监控：video 屏幕监控：screen
   Monitor: screen
-
-
-
 ```
