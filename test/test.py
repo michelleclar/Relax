@@ -1,7 +1,7 @@
 import threading
 import time
 from collections import deque
-
+import asyncio
 from core.base.execute import Build, ScriptArgs, MatchRule, Strategy, Policy
 from core.base.structs import POINT
 import cv2
@@ -154,7 +154,7 @@ def test_dag():
                     match_rule=MatchRule().template("settle"))
     a4 = ScriptArgs(task_name="结束", strategy=Strategy.ClickStrategy(Policy.CENTER),
                     match_rule=MatchRule().template("end"))
-    task = Build().BuildTaskArgs(win_title="aaa",task_loop=10)
+    task = Build().BuildTaskArgs(win_title="aaa", task_loop=10)
     task.add_nodes({a1, a2, a3, a4})
     task.add_edge(a1, a2)
     task.add_edge(a1, a3)
@@ -167,11 +167,46 @@ def test_dag():
     print([str(x) for x in task.nodes])
     print("======")
 
+
 def test_struct():
-    p = POINT(x=1,y=1)
+    p = POINT(x=1, y=1)
     p.x += 1
     p.y += 1
     print(p)
 
+
+q = deque()
+
+
+def push(i):
+    t = threading.current_thread()
+    for j in range(i):
+        push_element(f"{j} + {t.name}")
+
+
+def push_element(element: any):
+    time.sleep(1)
+    q.append(element)
+
+
+
+def test_queue():
+    tasks = []
+    for i in range(10):
+        task = threading.Thread(target=push, args=(tuple([10])))
+        tasks.append(task)
+    for task in tasks:
+        task.start()
+    start = now()
+    count = 0
+    while now() - start < 20:
+
+        while len(q) != 0:
+            e = q.pop()
+            count += 1
+            print(e)
+    print(count)
+
+
 if __name__ == '__main__':
-    test_struct()
+    test_queue()

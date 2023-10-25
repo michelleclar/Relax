@@ -27,6 +27,34 @@ GUARD = False
 POOL = ThreadPoolExecutor(max_workers=10)
 
 
+# TODO 启动一个线程来进行图片的保存处理 一个任务一个队列
+class asyn_queue(object):
+
+    def __init__(self):
+        # TODO 目前没有采用官方线程安全的队列 需测试是否需要替换 如果不需要将 将使用c++重写此队列
+        self.queue = deque()  # 对外提供的队列
+        self.mss = mss.mss()  # 截图
+
+    def push(self, path, img):
+        """
+
+        :param path:
+        :param img:
+        """
+        self.queue.append((path, img))
+
+    def run(self):
+        while True:
+            while len(self.queue) != 0:
+                e = self.queue.pop()
+                path = e[0]
+                img = e[1]
+                cv.save_img(path=path, img=img)
+
+
+Asyn = asyn_queue()
+
+
 def init_execute_processor():
     """
 
@@ -94,6 +122,7 @@ class MatchRule(object):
         """
 
         """
+
         def __init__(self, text):
             self.text = text
 
@@ -104,6 +133,7 @@ class MatchRule(object):
         """
 
         """
+
         def __init__(self, template_name, threshold=None):
             self.template_name = template_name
             self.threshold = threshold if threshold is not None else 0.9
@@ -185,6 +215,7 @@ class Build(object):
     """
 
     """
+
     def __init__(self):
         self.win_titles = set()
         pass
@@ -287,9 +318,6 @@ class BuildTaskArgs(object):
             return self.dag.topological_sort()
         except ValueError:
             logger.error(f'不允许有环流程不正确')
-
-    def get_head(self):
-        return self.nodes[0]
 
 
 # ===========================================================
@@ -445,6 +473,7 @@ class ScreenExecute(object):
     """
 
     """
+
     def __init__(self, region, task_loop, task_args: BuildTaskArgs):
 
         self.mss = mss.mss()  # 截图
@@ -504,7 +533,7 @@ class ScreenExecute(object):
                         continue
                     except exception.NOT_CLICK_EXCEPTION as e:
                         path = f'./imgs/not_click/{generate_current_time_name()}.png'
-                        cv.save_img(path=path, img=img)
+                        Asyn.push(path=path, img=img)
                         logger.warning(f"{e},retry,path：{path}")
                         self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
                         continue
@@ -513,7 +542,7 @@ class ScreenExecute(object):
                         path = f'./imgs/unknown/{generate_current_time_name()}.png'
                         # TODO 挑选一个图标
                         logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
-                        cv.save_img(path=path, img=img)
+                        Asyn.push(path=path, img=img)
                         continue
                     down = self.task_args.dag.downstream(node)
                     if len(down) != 0:
@@ -546,17 +575,15 @@ class ScreenExecute(object):
             self.is_click(match_rule=match_rule)
         except exception.NOT_FIND_EXCEPTION as e:
             # 表示没有找到 不在进行重试
-            name = f'{generate_current_time_name()}.png'
-            path = f'./imgs/not_click/{name}'
-            logger.warning(f'{e}')
-            cv.save_img(path=path, img=img)
+            path = f'./imgs/not_click/{generate_current_time_name()}.png'
+            logger.warning(f'{e},path:{path}')
+            Asyn.push(path=path, img=img)
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
-            name = f'{generate_current_time_name()}.png'
-            path = f'./imgs/not_click/{name}'
-            logger.warning(f'重试次数{count},图片保存名称为{name}')
-            cv.save_img(path=path, img=img)
+            path = f'./imgs/not_click/{generate_current_time_name()}.png'
+            logger.warning(f'重试次数{count},path:{path}')
+            Asyn.push(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
@@ -622,6 +649,7 @@ class VideoExecute(object):
     """
 
     """
+
     def __init__(self, region, task_loop: int, task_args: BuildTaskArgs):
         self.mss = mss.mss()  # 截图
         self.region = region  # 监视区域
@@ -667,7 +695,7 @@ class VideoExecute(object):
                 # 全屏进行截图
                 path = f'./imgs/cycle/{generate_current_time_name()}.png'
                 self.mss.shot(mon=-1, output=path)
-                logger.warning(f'{now() - start}时间内没有匹配任何目标,图片保存路径{path}')
+                logger.warning(f'{now() - start}时间内没有匹配任何目标,path:{path}')
             if count > 10:
                 new_nodes = self.filter_nodes(new_nodes)
                 length = len(new_nodes)
@@ -702,7 +730,7 @@ class VideoExecute(object):
             except exception.NOT_CLICK_EXCEPTION as e:
                 # 未知力量影响 将图片进行保存
                 path = f'./imgs/not_click/{generate_current_time_name()}.png'
-                cv.save_img(path=path, img=img)
+                Asyn.push(path=path, img=img)
                 logger.warning(f"{e},retry,path：{path}")
                 self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
                 continue
@@ -711,7 +739,7 @@ class VideoExecute(object):
                 path = f'./imgs/unknown/{generate_current_time_name()}.png'
                 # TODO 挑选一个图标
                 logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
-                cv.save_img(path=path, img=img)
+                Asyn.push(path=path, img=img)
                 continue
 
     def retry(self, match_rule, strategy, count):
@@ -733,16 +761,15 @@ class VideoExecute(object):
             self.is_click(match_rule=match_rule)
         except exception.NOT_FIND_EXCEPTION as e:
             # 表示没有找到 不在进行重试
-            name = f'{generate_current_time_name()}.png'
-            path = f'./imgs/not_click/{name}'
+            path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'{e}')
-            cv.save_img(path=path, img=img)
+            Asyn.push(path=path, img=img)
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'重试次数{count},path:{path}')
-            cv.save_img(path=path, img=img)
+            Asyn.push(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
@@ -802,29 +829,3 @@ class VideoExecute(object):
         except exception.NOT_FIND_EXCEPTION as e:
             return True
         raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
-
-
-# TODO 启动一个线程来进行图片的保存处理 一个任务一个队列
-class asyn_queue(object):
-
-    def __init__(self):
-        # key win_title
-        self.queue = queue.Queue() # 对外提供的队列
-        self.queue_dict = list(deque)
-        self.mss = mss.mss()  # 截图
-
-    def put(self, path, region):
-        """
-
-        :param path:
-        :param region:
-        """
-        self.queue.put(item=(path, region))
-
-    def run(self):
-        while True:
-            if not self.queue.empty():
-                pass
-
-
-
