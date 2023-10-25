@@ -1,15 +1,15 @@
-import mss
-from collections import deque
-import queue
-from concurrent.futures import ThreadPoolExecutor, wait
 import time as t
-
-import numpy as np
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor, wait
 from enum import Enum
+
+import mss
+import numpy as np
+
 from commons import exception
+from commons.utils.format import DataFormat
 from core.base import cv, simulate, log
 from core.base.structs import POINT, BOX
-from commons.utils.format import DataFormat
 
 # 执行方法
 logger = log.get_logger()
@@ -32,7 +32,7 @@ class asyn_queue(object):
     def __init__(self):
         # TODO 目前没有采用官方线程安全的队列 需测试是否需要替换 如果不需要将 将使用c++重写此队列
         self.img_queue = deque()  # 对外提供的队列
-        self.point_queue = deque() # 统计点击点
+        self.point_queue = deque()  # 统计点击点
         self.mss = mss.mss()  # 截图
 
     def push_img(self, path, img):
@@ -43,14 +43,15 @@ class asyn_queue(object):
         """
         self.img_queue.append((path, img))
 
-    def push_point(self,policy,point):
-        self.point_queue.append((policy,point))
+    def push_point(self, policy, point):
+        self.point_queue.append((policy, point))
+
     def execute_point(self):
 
         while True:
-            io_center = open('./point/center','a')
-            io_random = open('./point/random','a')
-            io_without = open('./point/without','a')
+            io_center = open('./point/center', 'a')
+            io_random = open('./point/random', 'a')
+            io_without = open('./point/without', 'a')
             while len(self.point_queue) != 0:
                 e = self.point_queue.pop()
                 policy = e[0]
@@ -68,7 +69,6 @@ class asyn_queue(object):
                 path = e[0]
                 img = e[1]
                 cv.save_img(path=path, img=img)
-
 
     def run(self):
         while True:
@@ -405,7 +405,7 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
         case Policy.CENTER:
             res = get_cent_xy(min_loc, box)
             point = POINT(x=res.x, y=res.y)
-            Asyn.point_queue.append((Policy.CENTER,point))
+            Asyn.point_queue.append((Policy.CENTER, point))
         case Policy.RANDOM:
             res = get_random_xy(min_loc, box)
             point = POINT(x=res.x, y=res.y)
