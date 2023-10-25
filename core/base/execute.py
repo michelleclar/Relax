@@ -31,21 +31,49 @@ class asyn_queue(object):
 
     def __init__(self):
         # TODO 目前没有采用官方线程安全的队列 需测试是否需要替换 如果不需要将 将使用c++重写此队列
-        self.queue = deque()  # 对外提供的队列
+        self.img_queue = deque()  # 对外提供的队列
+        self.point_queue = deque() # 统计点击点
         self.mss = mss.mss()  # 截图
 
-    def push(self, path, img):
+    def push_img(self, path, img):
         """
 
         :param path:
         :param img:
         """
-        self.queue.append((path, img))
+        self.img_queue.append((path, img))
+
+    def push_point(self,policy,point):
+        self.point_queue.append((policy,point))
+    def execute_point(self):
+
+        while True:
+            io_center = open('./point/center','a')
+            io_random = open('./point/random','a')
+            io_without = open('./point/without','a')
+            while len(self.point_queue) != 0:
+                e = self.point_queue.pop()
+                policy = e[0]
+                point = e[1]
+                match policy:
+                    case Policy.CENTER:
+                        io_center.write(f'{point.x},{point.y} ')
+                    case Policy.RANDOM:
+                        io_random.write(f'{point.x},{point.y} ')
+
+    def execute_img(self):
+        while True:
+            while len(self.img_queue) != 0:
+                e = self.img_queue.pop()
+                path = e[0]
+                img = e[1]
+                cv.save_img(path=path, img=img)
+
 
     def run(self):
         while True:
-            while len(self.queue) != 0:
-                e = self.queue.pop()
+            while len(self.img_queue) != 0:
+                e = self.img_queue.pop()
                 path = e[0]
                 img = e[1]
                 cv.save_img(path=path, img=img)
@@ -377,9 +405,11 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
         case Policy.CENTER:
             res = get_cent_xy(min_loc, box)
             point = POINT(x=res.x, y=res.y)
+            Asyn.point_queue.append((Policy.CENTER,point))
         case Policy.RANDOM:
             res = get_random_xy(min_loc, box)
             point = POINT(x=res.x, y=res.y)
+            Asyn.point_queue.append((Policy.RANDOM, point))
         case Policy.WITHOUT:
             # 匹配之外的点
             pass
@@ -529,7 +559,7 @@ class ScreenExecute(object):
                         continue
                     except exception.NOT_CLICK_EXCEPTION as e:
                         path = f'./imgs/not_click/{generate_current_time_name()}.png'
-                        Asyn.push(path=path, img=img)
+                        Asyn.push_img(path=path, img=img)
                         logger.warning(f"{e},retry,path：{path}")
                         self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
                         continue
@@ -537,7 +567,7 @@ class ScreenExecute(object):
                         # 未知力量影响将图片进行保存
                         path = f'./imgs/unknown/{generate_current_time_name()}.png'
                         logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
-                        Asyn.push(path=path, img=img)
+                        Asyn.push_img(path=path, img=img)
                         continue
                     down = self.task_args.dag.downstream(node)
                     if len(down) != 0:
@@ -572,13 +602,13 @@ class ScreenExecute(object):
             # 表示没有找到 不在进行重试
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'{e},path:{path}')
-            Asyn.push(path=path, img=img)
+            Asyn.push_img(path=path, img=img)
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'重试次数{count},path:{path}')
-            Asyn.push(path=path, img=img)
+            Asyn.push_img(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
@@ -725,7 +755,7 @@ class VideoExecute(object):
             except exception.NOT_CLICK_EXCEPTION as e:
                 # 未知力量影响 将图片进行保存
                 path = f'./imgs/not_click/{generate_current_time_name()}.png'
-                Asyn.push(path=path, img=img)
+                Asyn.push_img(path=path, img=img)
                 logger.warning(f"{e},retry,path：{path}")
                 self.retry(match_rule=node.match_rule, strategy=node.strategy, count=0)
                 continue
@@ -733,7 +763,7 @@ class VideoExecute(object):
                 # 未知力量影响将图片进行保存
                 path = f'./imgs/unknown/{generate_current_time_name()}.png'
                 logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
-                Asyn.push(path=path, img=img)
+                Asyn.push_img(path=path, img=img)
                 continue
 
     def retry(self, match_rule, strategy, count):
@@ -757,13 +787,13 @@ class VideoExecute(object):
             # 表示没有找到 不在进行重试
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'{e}')
-            Asyn.push(path=path, img=img)
+            Asyn.push_img(path=path, img=img)
             return
         except exception.NOT_CLICK_EXCEPTION as e:
             count += 1
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'重试次数{count},path:{path}')
-            Asyn.push(path=path, img=img)
+            Asyn.push_img(path=path, img=img)
             self.retry(match_rule=match_rule, strategy=strategy, count=count)
 
     def execute_match_rule(self, match_rule, screenshot):
