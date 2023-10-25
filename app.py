@@ -60,8 +60,8 @@ def parse_node(node):
     :return:
     """
     node_name = node['node']
-    strategy = parse_match_rule(node['match_rule'])
-    match_rule = parse_strategy(node['strategy'])
+    match_rule = parse_match_rule(node['match_rule'])
+    strategy = parse_strategy(node['strategy'])
     return ScriptArgs(task_name=node_name, strategy=strategy,
                       match_rule=match_rule)
 
