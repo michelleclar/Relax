@@ -21,7 +21,6 @@ def main():
 
             # Get raw pixels from the screen, save it to a Numpy array
             img = np.array(sct.grab(monitor))
-            # TODO 可以去做一些操作
             # Display the picture debug 才显示视频
             cv2.imshow("OpenCV/Numpy normal", img)
 

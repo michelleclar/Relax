@@ -13,7 +13,6 @@ logger = log.get_logger()
 # 匹配规则，ocr匹配:需要有匹配的文字参数 模板匹配:需要模板图片名字
 # 点击事件名，点击事件
 class ScriptTask:
-    # TODO 将存放任务流程更改成有向无环图
     def __init__(self, args):
         self.args = args  # 运行流程的参数
         self.W, self.H = simulate.current_resolution()

@@ -27,7 +27,6 @@ GUARD = False
 POOL = ThreadPoolExecutor(max_workers=10)
 
 
-# TODO 启动一个线程来进行图片的保存处理 一个任务一个队列
 class asyn_queue(object):
 
     def __init__(self):
@@ -348,7 +347,6 @@ class Execute(object):
             case _:
                 logger.error(f'不支持此类型：{task_type}')
 
-    # TODO 将这个执行转化成类 用来方便参数传递
     def execute_task_args(self, task: BuildTaskArgs):
         """
 
@@ -358,7 +356,6 @@ class Execute(object):
         match self.monitor:
             case "screen":
                 # 不开启视频流监控 采用截图方式 响应相对较慢
-                # TODO 在BuildTaskArgs 加入 task_loop 属性
                 ScreenExecute(region=region, task_loop=task.task_loop, task_args=task).execute()
             case "video":
                 # 视频流监控
@@ -386,7 +383,6 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
         case Policy.WITHOUT:
             # 匹配之外的点
             pass
-    # TODO 进行偏移
     point.x += strategy.offset.x
     point.y += strategy.offset.y
 
@@ -540,7 +536,6 @@ class ScreenExecute(object):
                     except Exception as e:
                         # 未知力量影响将图片进行保存
                         path = f'./imgs/unknown/{generate_current_time_name()}.png'
-                        # TODO 挑选一个图标
                         logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
                         Asyn.push(path=path, img=img)
                         continue
@@ -737,7 +732,6 @@ class VideoExecute(object):
             except Exception as e:
                 # 未知力量影响将图片进行保存
                 path = f'./imgs/unknown/{generate_current_time_name()}.png'
-                # TODO 挑选一个图标
                 logger.warning(f"😭😭😭{log.detail_error()},path:{path}")
                 Asyn.push(path=path, img=img)
                 continue
