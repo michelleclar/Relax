@@ -630,6 +630,8 @@ class ScreenExecute(object):
                     height, width = template.shape[:2]
                     box = BOX(height=height, width=width)
                     cv.rectangle(target=screenshot, min_loc=min_loc, box=box)
+                    if DEBUG:
+                        show(f"{self.win_title}+{match_rule.template_name}",screenshot)
                     return box, min_loc
                 else:
                     # 匹配失败 retry
@@ -743,9 +745,13 @@ class VideoExecute(object):
         """
         for node in nodes:
             img = self.screenshot()
+            if DEBUG:
+                show(self.win_title,img)
             try:
                 box, min_loc = self.execute_match_rule(match_rule=node.match_rule,
                                                        screenshot=img)  # 匹配
+                if DEBUG:
+                    show(self.win_title,img)
                 self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
                 self.is_click(node.match_rule)
                 node.fail_count -= 1
@@ -853,3 +859,5 @@ class VideoExecute(object):
         except exception.NOT_FIND_EXCEPTION as e:
             return True
         raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
+def show(title: str,img):
+    cv.show(title,img)

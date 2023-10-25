@@ -21,7 +21,8 @@ def do_match(target, template):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return [(max_val - min_val), min_loc]
 
-
+def show(title,img):
+    cv2.imshow(title, img)
 def do_match(target, template, DEBUG=None):
     """
     模板匹配
