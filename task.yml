@@ -5,7 +5,7 @@ tasks:
       - node: "式神录"
         strategy:
           type: "ClickStrategy"
-          policy: "CENTER"
+          policy: "center"
           offset:
             x: 0
             y: 0
@@ -21,26 +21,26 @@ tasks:
             match_rule:
               type: "template"
               value: "test_step2"
-  - task: "副账号"
-    taskloop: 10
-    nodes:
-      - node: "式神录"
-        strategy:
-          type: "ClickStrategy"
-          policy: "CENTER"
-          offset:
-            x: 0
-            y: 0
-          button: "left"
-        match_rule:
-          type: "template"
-          value: "test_step1"
-          threshold: 0.9
-        child:
-          - node: "返回"
-            strategy:
-              type: "ClickStrategy"
-            match_rule:
-              type: "template"
-              value: "test_step2"
+#  - task: "副账号"
+#    taskloop: 10
+#    nodes:
+#      - node: "式神录"
+#        strategy:
+#          type: "ClickStrategy"
+#          policy: "CENTER"
+#          offset:
+#            x: 0
+#            y: 0
+#          button: "left"
+#        match_rule:
+#          type: "template"
+#          value: "test_step1"
+#          threshold: 0.9
+#        child:
+#          - node: "返回"
+#            strategy:
+#              type: "ClickStrategy"
+#            match_rule:
+#              type: "template"
+#              value: "test_step2"
 

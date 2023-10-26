@@ -80,7 +80,8 @@ class asyn_queue(object):
 
 
 Asyn = asyn_queue()
-
+POOL.submit(Asyn.execute_point)
+POOL.submit(Asyn.execute_img)
 
 def init_execute_processor():
     """
@@ -391,11 +392,11 @@ class Execute(object):
 
 
 # 得到中点坐标
-def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
+def get_xy(strategy: Strategy.ClickStrategy, pt, box):
     """
 
     :param strategy:
-    :param min_loc:
+    :param pt:
     :param box:
     :return:
     """
@@ -403,11 +404,11 @@ def get_xy(strategy: Strategy.ClickStrategy, min_loc, box):
     point = POINT()
     match _strategy:
         case Policy.CENTER:
-            res = get_cent_xy(min_loc, box)
+            res = get_cent_xy(pt, box)
             point = POINT(x=res.x, y=res.y)
             Asyn.point_queue.append((Policy.CENTER, point))
         case Policy.RANDOM:
-            res = get_random_xy(min_loc, box)
+            res = get_random_xy(pt, box)
             point = POINT(x=res.x, y=res.y)
             Asyn.point_queue.append((Policy.RANDOM, point))
         case Policy.WITHOUT:
@@ -433,8 +434,7 @@ def get_cent_xy(avg, box):
     :param box:
     :return:
     """
-    height, width = box
-    lower_right = (avg[0] + width, avg[1] + height)
+    lower_right = (avg[0] + box.width, avg[1] + box.height)
     x = (int((avg[0] + lower_right[0]) / 2))
     y = (int((avg[1] + lower_right[1]) / 2))
     return POINT(x=x, y=y)
@@ -515,7 +515,9 @@ class ScreenExecute(object):
 
         :return:
         """
-        return np.array(self.mss.grab(self.region))
+        img = np.array(self.mss.grab(self.region))
+        cv.cvtColor(img)
+        return cv.cvtColor(img)
 
     def execute(self):
         """
@@ -549,8 +551,8 @@ class ScreenExecute(object):
                 for node in nodes:
                     img = self.screenshot()
                     try:
-                        box, min_loc = self.execute_match_rule(match_rule=node.match_rule, screenshot=img)  # 匹配
-                        self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
+                        box, pt = self.execute_match_rule(match_rule=node.match_rule, screenshot=img)  # 匹配
+                        self.execute_strategy(strategy=node.strategy, box=box, min_loc=pt)  # 匹配之后
                         self.is_click(node.match_rule)
                         flag = True
                     except exception.NOT_FIND_EXCEPTION as e:
@@ -574,6 +576,7 @@ class ScreenExecute(object):
                         q.append(down)
                     break
                 if flag:
+                    flag = False
                     break
             else:
                 # 全屏进行截图
@@ -624,15 +627,15 @@ class ScreenExecute(object):
 
                 template = cv.cache_imread(f"./imgs/{match_rule.template_name}.png")
 
-                threshold, min_loc = cv.do_match(screenshot, template)
+                threshold, pt = cv.do_match(screenshot, template)
                 if threshold > match_rule.threshold:
                     # 匹配成功
                     height, width = template.shape[:2]
                     box = BOX(height=height, width=width)
-                    cv.rectangle(target=screenshot, min_loc=min_loc, box=box)
+                    cv.rectangle(target=screenshot, min_loc=pt, box=box)
                     if DEBUG:
-                        show(f"{self.win_title}+{match_rule.template_name}",screenshot)
-                    return box, min_loc
+                        show(f"{self.task_args.win_title}+{match_rule.template_name}",screenshot)
+                    return box, pt
                 else:
                     # 匹配失败 retry
                     raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name},retry")
@@ -651,6 +654,8 @@ class ScreenExecute(object):
         match type(strategy):
             case Strategy.ClickStrategy:
                 point = get_xy(strategy, min_loc, box)
+                point.x += self.region[0]
+                point.y += self.region[1]
                 simulate.click(point, strategy.button.value)
                 logger.info(f'🖱️🖱️🖱️点击坐标：偏移后：{point}，偏移量：{strategy.offset}')
             case Strategy.InputKeyStrategy:
@@ -665,7 +670,7 @@ class ScreenExecute(object):
         :return:
         """
         try:
-            self.execute_match_rule(match_rule=match_rule, screenshot=np.array(self.mss.grab(self.region)))
+            self.execute_match_rule(match_rule=match_rule, screenshot=self.screenshot())
         except exception.NOT_FIND_EXCEPTION as e:
             return True
 
@@ -691,7 +696,9 @@ class VideoExecute(object):
 
         :return:
         """
-        return np.array(self.mss.grab(self.region))
+        img = np.array(self.mss.grab(self.region))
+        cv.cvtColor(img)
+        return cv.cvtColor(img)
 
     def execute(self):
         """
@@ -746,12 +753,12 @@ class VideoExecute(object):
         for node in nodes:
             img = self.screenshot()
             if DEBUG:
-                show(self.win_title,img)
+                show(self.task_args.win_title,img)
             try:
                 box, min_loc = self.execute_match_rule(match_rule=node.match_rule,
                                                        screenshot=img)  # 匹配
                 if DEBUG:
-                    show(self.win_title,img)
+                    show(self.task_args.win_title,img)
                 self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
                 self.is_click(node.match_rule)
                 node.fail_count -= 1
@@ -841,6 +848,8 @@ class VideoExecute(object):
         match type(strategy):
             case Strategy.ClickStrategy:
                 point = get_xy(strategy, min_loc, box)
+                point.x += self.region[0]
+                point.y += self.region[1]
                 simulate.click(point, strategy.button.value)
                 logger.info(f'🖱️🖱️🖱️点击坐标：偏移后：{point}，偏移量：{strategy.offset}')
             case Strategy.InputKeyStrategy:

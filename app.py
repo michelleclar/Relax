@@ -79,7 +79,7 @@ def parse_strategy(strategy):
             offset = POINT(x=0, y=0)
             button = Button.LEFT
             if strategy.get('policy'):
-                policy = strategy['policy']
+                policy = parse_policy(strategy['policy'])
             if strategy.get('offset'):
                 offset = POINT(x=strategy['offset']['x'], y=strategy['offset']['y'])
             if strategy.get('button'):
@@ -132,6 +132,18 @@ def parse_button(button: str):
         case 'middle':
             return Button.MIDDLE
 
+def parse_policy(policy: str):
+    """
 
+    :param policy:
+    :return:
+    """
+    match policy:
+        case 'center':
+            return Policy.CENTER
+        case 'random':
+            return Policy.RANDOM
+        case 'without':
+            return Policy.RANDOM
 if __name__ == '__main__':
     main()

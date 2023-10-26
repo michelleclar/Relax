@@ -16,26 +16,29 @@ def do_match(target, template):
     :param template: 模板图像
     :return: 置信度 最佳匹配左上角
     """
-    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+    result = cv2.matchTemplate(image=target, templ=template, method=cv2.TM_CCOEFF_NORMED)
     # min_loc 左上角
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-    return [(max_val - min_val), min_loc]
+    return [max_val, max_loc]
 
-def show(title,img):
+
+def show(title, img):
     cv2.imshow(title, img)
-def do_match(target, template, DEBUG=None):
-    """
-    模板匹配
-    :param target: 目标图像
-    :param template: 模板图像
-    :return: 置信度 最佳匹配左上角
-    """
-    result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
-    # min_loc 左上角
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-    if DEBUG:
-        match_debug(target=target, result=result, box=template.shape[:2])
-    return [(max_val - min_val), min_loc]
+
+
+# def do_match(target, template, DEBUG=None):
+#     """
+#     模板匹配
+#     :param target: 目标图像
+#     :param template: 模板图像
+#     :return: 置信度 最佳匹配左上角
+#     """
+#     result = cv2.matchTemplate(target, template, cv2.TM_SQDIFF_NORMED)
+#     # min_loc 左上角
+#     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+#     if DEBUG:
+#         match_debug(target=target, result=result, box=template.shape[:2])
+#     return [(max_val - min_val), min_loc]
 
 
 def match_debug(target, result, box):
@@ -73,7 +76,7 @@ def cache_imread(path):
     三维数组，其中第一维表示像素的行数，第二维表示像素的列数，第三维表示像素的通道数
     """
     if path not in imgs.keys():
-        imgs[path] = cv2.imread(path)
+        imgs[path] = cv2.imread(path, flags=0)
     return imgs[path]
 
 
@@ -85,7 +88,7 @@ def imread(path):
     cv2.imread 返回值是 一个RGB NumPy
     三维数组，其中第一维表示像素的行数，第二维表示像素的列数，第三维表示像素的通道数
     """
-    return cv2.imread(path)
+    return cv2.imread(filename=path, flags=0)
 
 
 # 保存图片
@@ -118,53 +121,5 @@ def compare_img(img1, img2, sore=10):
     return mse < sore
 
 
-# 创建一个回调函数，用于处理鼠标事件
-def select_region(event, x, y, flags, param):
-    global top_left_pt, bottom_right_pt, selecting
-
-    # 当按下鼠标左键时，开始选择区域
-    if event == cv2.EVENT_LBUTTONDOWN:
-        top_left_pt = (x, y)
-        selecting = True
-
-    # 当释放鼠标左键时，结束选择区域
-    elif event == cv2.EVENT_LBUTTONUP:
-        bottom_right_pt = (x, y)
-        selecting = False
-
-
-def open_video(region):
-    # 打开视频流
-    cap = cv2.VideoCapture(0)
-
-    # 创建一个窗口，并将回调函数绑定到窗口中
-    cv2.namedWindow("Video Stream")
-    cv2.setMouseCallback("Video Stream", select_region)
-
-    # 循环从视频流中读取帧
-    while True:
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        # 如果正在选择区域，绘制一个矩形框显示选择的区域
-        if selecting:
-            cv2.rectangle(frame, top_left_pt, bottom_right_pt, (0, 255, 0), 2)
-
-        # 显示视频帧
-        cv2.imshow("Video Stream", frame)
-
-        # 按下 'q' 键退出循环
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # 根据选择的区域截取图像
-    selected_region = frame[top_left_pt[1]:bottom_right_pt[1], top_left_pt[0]:bottom_right_pt[0]]
-
-    # 保存截图
-    cv2.imwrite("selected_region.png", selected_region)
-
-    # 释放资源
-    cap.release()
-    cv2.destroyAllWindows()
+def cvtColor(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

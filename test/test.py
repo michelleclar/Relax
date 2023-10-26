@@ -1,40 +1,9 @@
 import threading
 import time
 from collections import deque
-import asyncio
 from core.base.execute import Build, ScriptArgs, MatchRule, Strategy, Policy
 from core.base.structs import POINT
-import cv2
 
-
-def test_deque():
-    a1 = ScriptArgs(task_name="开始", strategy=Strategy.ClickStrategy(Strategy.CENTER),
-                    match_rule=MatchRule().template("action"))
-    a2 = ScriptArgs(task_name="失败", strategy=Strategy.ClickStrategy(Strategy.CENTER),
-                    match_rule=MatchRule().template("failed"))
-
-    a3 = ScriptArgs(task_name="结算", strategy=Strategy.ClickStrategy(Strategy.CENTER),
-                    match_rule=MatchRule().template("settle"))
-    a4 = ScriptArgs(task_name="结束", strategy=Strategy.ClickStrategy(Strategy.CENTER),
-                    match_rule=MatchRule().template("end"))
-    task = Build().BuildTaskArgs("aaa")
-    task.add_nodes({a1, a2, a3, a4})
-    task.add_edge(a1, a2)
-    task.add_edge(a1, a3)
-    task.add_edge(a3, a4)
-    task.build()
-    dag = task.dag
-    q = deque()
-    head = dag.ind_nodes()
-    q.append(head)
-    while q.__len__() != 0:
-        nodes = q.pop()
-        # scrreenshot = self.do_screenshot(region=region, screenshot_path=screenshot_path)
-        # do_execute(node, screenshot=scrreenshot)
-        for node in nodes:
-            down = dag.downstream(node)
-            if len(down) != 0:
-                q.append(down)
 
 
 def test_asyncio():
@@ -132,16 +101,6 @@ def test_autpjmp():
             # Max retries exceeded, raise an exception or handle it as needed
             print(f"🙃🙃🙃{10}秒点击失败：{str(node)}")
 
-
-def test_match():
-    strategy = Strategy.ClickStrategy()
-
-    match type(strategy):
-        case Strategy.ClickStrategy:
-            print(1)
-
-        case Strategy.InputKeyStrategy:
-            print(2)
 
 
 def test_dag():
