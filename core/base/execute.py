@@ -555,11 +555,11 @@ class ScreenExecute(object):
                         self.execute_strategy(strategy=node.strategy, box=box, min_loc=pt)  # 匹配之后
                         self.is_click(node.match_rule)
                         flag = True
-                    except exception.NOT_FIND_EXCEPTION as e:
+                    except exception.NOT_MATCH_EXCEPTION as e:
                         logger.warning(f'{e},当前置性度:{node.match_rule.threshold}')
                         t.sleep(1)
                         continue
-                    except exception.NOT_CLICK_EXCEPTION as e:
+                    except exception.CLICK_EXCEPTION as e:
                         path = f'./imgs/not_click/{generate_current_time_name()}.png'
                         Asyn.push_img(path=path, img=img)
                         logger.warning(f"{e},retry,path：{path}")
@@ -601,13 +601,13 @@ class ScreenExecute(object):
                                                    screenshot=img)
             self.execute_strategy(strategy=strategy, box=box, min_loc=min_loc)
             self.is_click(match_rule=match_rule)
-        except exception.NOT_FIND_EXCEPTION as e:
+        except exception.NOT_MATCH_EXCEPTION as e:
             # 表示没有找到 不在进行重试
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'{e},path:{path}')
             Asyn.push_img(path=path, img=img)
             return
-        except exception.NOT_CLICK_EXCEPTION as e:
+        except exception.CLICK_EXCEPTION as e:
             count += 1
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'重试次数{count},path:{path}')
@@ -638,7 +638,7 @@ class ScreenExecute(object):
                     return box, pt
                 else:
                     # 匹配失败 retry
-                    raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name},retry")
+                    raise exception.NOT_MATCH_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name},retry")
             case MatchRule.Ocr:
                 # Ocr
                 pass
@@ -671,10 +671,10 @@ class ScreenExecute(object):
         """
         try:
             self.execute_match_rule(match_rule=match_rule, screenshot=self.screenshot())
-        except exception.NOT_FIND_EXCEPTION as e:
+        except exception.NOT_MATCH_EXCEPTION as e:
             return True
 
-        raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐没有点击{match_rule.template_name}")
+        raise exception.CLICK_EXCEPTION(f"😐😐😐没有点击{match_rule.template_name}")
 
 
 class VideoExecute(object):
@@ -762,10 +762,10 @@ class VideoExecute(object):
                 self.execute_strategy(strategy=node.strategy, box=box, min_loc=min_loc)  # 匹配之后
                 self.is_click(node.match_rule)
                 node.fail_count -= 1
-            except exception.NOT_FIND_EXCEPTION as e:
+            except exception.NOT_MATCH_EXCEPTION as e:
                 logger.warning(f'{e},当前置性度:{node.match_rule.threshold}')
                 continue
-            except exception.NOT_CLICK_EXCEPTION as e:
+            except exception.CLICK_EXCEPTION as e:
                 # 未知力量影响 将图片进行保存
                 path = f'./imgs/not_click/{generate_current_time_name()}.png'
                 Asyn.push_img(path=path, img=img)
@@ -796,13 +796,13 @@ class VideoExecute(object):
                                                    screenshot=img)
             self.execute_strategy(strategy=strategy, box=box, min_loc=min_loc)
             self.is_click(match_rule=match_rule)
-        except exception.NOT_FIND_EXCEPTION as e:
+        except exception.NOT_MATCH_EXCEPTION as e:
             # 表示没有找到 不在进行重试
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'{e}')
             Asyn.push_img(path=path, img=img)
             return
-        except exception.NOT_CLICK_EXCEPTION as e:
+        except exception.CLICK_EXCEPTION as e:
             count += 1
             path = f'./imgs/not_click/{generate_current_time_name()}.png'
             logger.warning(f'重试次数{count},path:{path}')
@@ -832,7 +832,7 @@ class VideoExecute(object):
                     return box, min_loc
                 else:
                     # 匹配失败 retry
-                    raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name}")
+                    raise exception.NOT_MATCH_EXCEPTION(f"😐😐😐没有匹配{match_rule.template_name}")
             case MatchRule.Ocr:
                 # Ocr
                 pass
@@ -865,8 +865,8 @@ class VideoExecute(object):
         img = self.screenshot()
         try:
             self.execute_match_rule(match_rule=match_rule, screenshot=img)
-        except exception.NOT_FIND_EXCEPTION as e:
+        except exception.NOT_MATCH_EXCEPTION as e:
             return True
-        raise exception.NOT_CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
+        raise exception.CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
 def show(title: str,img):
     cv.show(title,img)

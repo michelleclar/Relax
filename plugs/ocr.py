@@ -1,7 +1,11 @@
-from core.base import cv, simulate, log
-from PIL import Image
+import numpy
+from PIL.Image import Image
+
+from core.base import cv, log
 from paddleocr import PaddleOCR, draw_ocr
 import cv2
+import mss
+
 logger = log.get_logger()
 
 
@@ -62,7 +66,7 @@ def do_ocr(img_name, deg=False):
 
 def deg_ocr(img_name, result, path):
     # image = Image.open(path).convert('RGB')
-    img = image.cv2_imread(path)
+    img = cv.imread(path)
     boxes = [line[0] for line in result]
     txts = [line[1][0] for line in result]
     scores = [line[1][1] for line in result]
@@ -114,16 +118,42 @@ def ocrByPDF():
 
 
 def get_image_center(image_path):
-    image_width, image_height = image.cv2_imread(image_path)[:2]
+    image_width, image_height = cv.imread(image_path)[:2]
     center_x = image_width // 2
     center_y = image_height // 2
     return center_x, center_y
 
 
+def test_ocr():
+    ocr = PaddleOCR(use_angle_cls=True, lang="ch")
+    monitor = {"top": 40, "left": 0, "width": 800, "height": 640}
+    sct = mss.mss()
+    sct_img = sct.grab(monitor)
+    img = numpy.array(sct_img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    from PIL import Image
+
+    result = ocr.ocr(img, cls=True)
+    for idx in range(len(result)):
+        res = result[idx]
+        for line in res:
+            print(line)
+
+
+    res = Image.frombytes('RGB', sct_img.size, sct_img.bgra, 'raw', 'BGRX')
+    result = result[0]
+    boxes = [line[0] for line in result]
+    txts = [line[1][0] for line in result]
+    scores = [line[1][1] for line in result]
+    im_show = draw_ocr(res, boxes, txts, scores, font_path='./fonts/simfang.ttf')
+    im_show = Image.fromarray(im_show)
+    im_show.save('result.jpg')
+
+
 if __name__ == '__main__':
     # get_xy("jjtp",True)
     # screet.do_screenshot("../imgs/screenshot/screenshot.png")
-    text = do_ocr("jiejie_num")
+    test_ocr()
     # num = text.split('/')[0]
     # print(num)
     # avg = get_xy("start_game", True)

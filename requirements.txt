@@ -2,7 +2,7 @@ pyautogui~=0.9.54
 opencv-python<=4.6.0.66
 opencv-contrib-python<=4.6.0.66
 numpy~=1.26.0
-#Pillow~=9.5.0 å›¾åƒå¤„ç†åº“,ç”¨äºŽå›¾ç‰‡è¯»å–,å¤„ç†å’Œä¿å­˜
+#Pillow~=9.5.0 Í¼Ïñ´¦Àí¿â,ÓÃÓÚÍ¼Æ¬¶ÁÈ¡,´¦ÀíºÍ±£´æ
 #pywin32
 paddlepaddle
 paddleocr~=2.6.1.3

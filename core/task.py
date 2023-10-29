@@ -78,7 +78,7 @@ class ScriptTask:
         avg = self.get_xy(img_model_path)
 
         if avg is None:
-            raise exception.NOT_FIND_EXCEPTION(f"😐😐😐没有匹配{name},retry")
+            raise exception.NOT_MATCH_EXCEPTION(f"😐😐😐没有匹配{name},retry")
         logger.info("🖱️🖱️🖱️正在点击：{}，坐标xy：{}，{}", name, avg[0], avg[1])
         x, y = coordinates
         x += avg[0]
@@ -93,7 +93,7 @@ class ScriptTask:
             cv.save_img(f"../imgs/fail/click/{before_click}.png", self.img)
             after_click = f"{util.format_time(format.ONLY_TIME)}after-{name}"
             cv.save_img(f"../imgs/fail/click/{after_click}.png", img)
-            raise exception.NOT_CLICK_EXCEPTION(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
+            raise exception.CLICK_EXCEPTION(f"👿👿👿疑似没有点击{name}，坐标xy：{x}，{y}")
         logger.info(f"✔️✔️✔️点击成功：{name}，坐标xy：{x}，{y}")
         return self
 
@@ -150,12 +150,12 @@ class ScriptTask:
                     try:
                         self.auto_click(*arg).sleep(times[i + 1])
                         # 检查点击是否有效
-                    except exception.NOT_FIND_EXCEPTION as e:
+                    except exception.NOT_MATCH_EXCEPTION as e:
                         # Handle the custom exception (e.g., log it)
                         logger.warning(e)
                         util.sleep(1)
                         continue
-                    except exception.NOT_CLICK_EXCEPTION as e:
+                    except exception.CLICK_EXCEPTION as e:
                         logger.warning(f"{e},retry")
                         continue
                     except Exception as e:

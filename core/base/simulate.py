@@ -82,5 +82,6 @@ def keep_visible_win(win_title: str):
     win = pyautogui.getWindowsWithTitle(win_title)
     if len(win) != 1:
         raise logger.warning(f"所给title不是唯一或者不存在，所匹配的数量{len(win)}")
+
     win[0].restore()
     win[0].activate()
