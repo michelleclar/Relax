@@ -12,7 +12,7 @@ execute:
   # 如果节点匹配失败次数超过指定次将会将该节点删除
   FailCount: 100
   # 视频流监控：video 屏幕监控：screen
-  Monitor: screen
+  Monitor: video
   
 
 

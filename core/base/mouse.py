@@ -1,29 +1,42 @@
-from pymouse import Pymouse
+import ctypes
+
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_LEFTCLICK = MOUSEEVENTF_LEFTDOWN + MOUSEEVENTF_LEFTUP
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+MOUSEEVENTF_RIGHTCLICK = MOUSEEVENTF_RIGHTDOWN + MOUSEEVENTF_RIGHTUP
+MOUSEEVENTF_MIDDLEDOWN = 0x0020
+MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_MIDDLECLICK = MOUSEEVENTF_MIDDLEDOWN + MOUSEEVENTF_MIDDLEUP
+
+kernel32 = ctypes.windll.kernel32
+user32 = ctypes.windll.user32
 
 
-m = Pymouse()
+def move():
+    # 设置鼠标光标位置
+    x = 1000
+    y = 1000
+    user32.SetCursorPos(x, y)
 
-def move(point):
-    m.move(point.x,point.y)
-
-
-def scroll():
-    """中键垂直滚动"""
-    m.scroll(10,0)
 
 def click(point):
-    """1:左键，2:右键，3:中间"""
-    m.click(point.x,point.y,1)
+    user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+    user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
 
-def drag(500,300):
-    m.drag(point.x,point.y)
-
-def screen_size():
-    """获取屏幕大小"""
-    return m.screen_size()
-
-def position():
-    """获取当前鼠标位置"""
-    return m.position()
+    # 模拟键盘按下
+    # key = 'a'
+    # user32.keybd_event(ord(key), 0, 0, 0)
+    # user32.keybd_event(ord(key), 0, KEYEVENTF_KEYUP, 0)
 
 
+# if __name__ == '__main__':
+#     move()
+#     from core.base.structs import POINT
+#     import time
+#
+#     # time.sleep(1)
+#
+#     click(POINT(x=500, y=500))
