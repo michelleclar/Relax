@@ -1,10 +1,14 @@
 ```python
 
-import cv2 
-import  numpy as np
+import cv2
+import numpy as np
+
+
 def click(picture_name):
+
+
 # 读取图片
-pic = cv2.imread(f'./imgs/{picture_name}.png')
+pic = cv2.imread(f'python/imgs/{picture_name}.png')
 # 截取当前屏幕
 screen = np.array(pyautogui.screenshot())
 # 保存图片
@@ -20,7 +24,6 @@ min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 pyautogui.moveTo(max_loc[0] + pic.shape[1] // 2, max_loc[1] + pic.shape[0] // 2)
 pyautogui.click()
 
-
 # 设置截图区域
 screen_area = (0, 0, 800, 600)
 
@@ -31,43 +34,52 @@ screen = np.array(pyautogui.screenshot(region=screen_area))
 # 转换为灰度图
 gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
 
-    # 识别电脑中央的 '+' 号
-    plus_symbol = cv2.matchTemplate(gray, cv2.imread('plus_symbol.png', 0), cv2.TM_CCOEFF_NORMED)
-    location = np.where(plus_symbol >= 0.8)
+# 识别电脑中央的 '+' 号
+plus_symbol = cv2.matchTemplate(gray, cv2.imread('plus_symbol.png', 0), cv2.TM_CCOEFF_NORMED)
+location = np.where(plus_symbol >= 0.8)
 
-    # 如果找到 '+' 号,则点击该位置
-    if location[0].size > 0:
-        click_location = (location[1][0] + screen_area[0], location[0][0] + screen_area[1])
-        pyautogui.click(click_location)
+# 如果找到 '+' 号,则点击该位置
+if location[0].size > 0:
+    click_location = (location[1][0] + screen_area[0], location[0][0] + screen_area[1])
+    pyautogui.click(click_location)
 
-    # 0.5 秒后继续循环
-    cv2.waitKey(500)
+# 0.5 秒后继续循环
+cv2.waitKey(500)
+
 
 class Game:
-def __init__(self):
-self.screen = None
+
+
+    def __init__(self):
+
+
+    self.screen = None
 self.player_pos = None
 
-    def get_screen(self):
-        self.screen = pyautogui.screenshot()
 
-    def get_player_pos(self):
-        # 使用OpenCV解析self.screen获取玩家位置
-        self.player_pos = (x, y)
+def get_screen(self):
+    self.screen = pyautogui.screenshot()
+
+
+def get_player_pos(self):
+    # 使用OpenCV解析self.screen获取玩家位置
+    self.player_pos = (x, y)
 
 
 game = Game()
 while True:
-game.get_screen()
+    game.get_screen()
 game.get_player_pos()
 
-    # 使用AI算法计算下一步行动
-    action = ai_algo(game.screen, game.player_pos)
+# 使用AI算法计算下一步行动
+action = ai_algo(game.screen, game.player_pos)
 
-    # 执行行动,如:
-    pyautogui.move(action[0], action[1])
+# 执行行动,如:
+pyautogui.move(action[0], action[1])
 
 import cv2
+
+
 def select_region(event, x, y, flags, param):
     global top_left_pt, bottom_right_pt, selecting
 
@@ -81,39 +93,39 @@ def select_region(event, x, y, flags, param):
         bottom_right_pt = (x, y)
         selecting = False
 
+
 def open_video(region):
-        
     # 打开视频流
     cap = cv2.VideoCapture(0)
-    
+
     # 创建一个窗口，并将回调函数绑定到窗口中
     cv2.namedWindow("Video Stream")
     cv2.setMouseCallback("Video Stream", select_region)
-    
+
     # 循环从视频流中读取帧
     while True:
         ret, frame = cap.read()
-    
+
         if not ret:
             break
-    
+
         # 如果正在选择区域，绘制一个矩形框显示选择的区域
         if selecting:
             cv2.rectangle(frame, top_left_pt, bottom_right_pt, (0, 255, 0), 2)
-    
+
         # 显示视频帧
         cv2.imshow("Video Stream", frame)
-    
+
         # 按下 'q' 键退出循环
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    
+
     # 根据选择的区域截取图像
     selected_region = frame[top_left_pt[1]:bottom_right_pt[1], top_left_pt[0]:bottom_right_pt[0]]
-    
+
     # 保存截图
     cv2.imwrite("selected_region.png", selected_region)
-    
+
     # 释放资源
     cap.release()
     cv2.destroyAllWindows()

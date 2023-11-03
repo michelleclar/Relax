@@ -6,10 +6,11 @@ from enum import Enum
 import mss
 import numpy as np
 
-from commons import exception
-from commons.utils.format import DataFormat
-from core.base import cv, simulate, log
-from core.base.structs import POINT, BOX
+from python.commons import exception
+from python.commons.utils import DataFormat
+from python.core.base import simulate
+from python.core.base import cv, log
+from python.core.base.structs import POINT, BOX
 
 # 执行方法
 logger = log.get_logger()
@@ -187,7 +188,7 @@ class Button(Enum):
 class Strategy(object):
     class ClickStrategy(object):
         """点击策略"""
-        from core.base.structs import OFFSET
+        from python.core.base.structs import OFFSET
         def __init__(self, policy=Policy.CENTER, offset=OFFSET(x=0, y=0), button=Button.LEFT):
             self.policy = policy
             self.offset = offset
@@ -263,7 +264,7 @@ class BuildTaskArgs(object):
     """任务流构建器"""
 
     def __init__(self, win_title: str, task_loop: int):
-        from core.base.structs import DAG
+        from python.core.base.structs import DAG
         self.dag = DAG()
         self.win_title = win_title
         self.nodes = set()
@@ -869,4 +870,4 @@ class VideoExecute(object):
             return True
         raise exception.CLICK_EXCEPTION(f"😐😐😐疑似没有点击{match_rule.template_name},retry")
 def show(title: str,img):
-    cv.show(title,img)
+    cv.show(title, img)

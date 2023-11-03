@@ -1,6 +1,8 @@
-from commons import img_name, exception
-from commons.utils import format, util
-from core.base import cv, simulate, log
+from python.commons import img_name
+from python.commons import exception
+from python.commons.utils import util, format
+from python.core.base import simulate
+from python.core.base import cv, log
 
 # 创建一个字典
 

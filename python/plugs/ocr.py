@@ -1,7 +1,6 @@
 import numpy
-from PIL.Image import Image
 
-from core.base import cv, log
+from python.core.base import cv, log
 from paddleocr import PaddleOCR, draw_ocr
 import cv2
 import mss
@@ -19,7 +18,7 @@ def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
     :param is_deg_recog: 是否进行倾斜矫正
     :return: 文本实际中心坐标，如果未找到匹配的文本则返回None
     '''
-    path = f'../imgs/result_imgs/{img_name}.png'
+    path = f'../python/imgs/result_imgs/{img_name}.png'
     ocr = PaddleOCR(use_angle_cls=True, lang="ch")
     # 图片中心x,y
     avg_pic = get_image_center(path)
@@ -54,7 +53,7 @@ def get_text_center(img_name, text, avg_img_name, is_deg_recog=False):
 
 
 def do_ocr(img_name, deg=False):
-    path = f'../imgs/result_imgs/{img_name}.png'
+    path = f'../python/imgs/result_imgs/{img_name}.png'
     ocr = PaddleOCR(use_angle_cls=True, lang="ch")
     result = ocr.ocr(path, cls=True)
     text = result[0][0][1][0]

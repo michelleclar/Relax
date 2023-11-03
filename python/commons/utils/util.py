@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 import numpy as np
 import pyautogui
 
-from core.base.structs import POINT
+from python.core.base.structs import POINT
 
 
 # 生成随机字符串

@@ -1,10 +1,10 @@
 from collections import namedtuple
 from enum import Enum
-from core.base.structs import DAG, OFFSET
-import core.base.log
+from python.core.base.structs import DAG, OFFSET
+import python.core.base.log
 Edge = namedtuple('Edge', ['ind_node', 'dep_node'])
 
-logger = core.base.log.get_logger()
+logger = python.core.base.log.get_logger()
 
 
 # 任务参数设置  将点击延迟和随机点击迁移到点击事件名中

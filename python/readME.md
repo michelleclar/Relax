@@ -49,9 +49,9 @@ paddlepaddle是目前使用下来比ddddocr和pytesseract更好的ocr依赖库,[
 >    pip install -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 >    ```
 >
-> 2. 编写[config.ymal](./doc/config.md) 进行参数设置
+> 2. 编写[config.ymal](doc/config.md) 进行参数设置
 >
-> 3. 编写[task.ymal](./doc/task.md) 进行任务设置
+> 3. 编写[task.ymal](doc/task.md) 进行任务设置
 >
 > 4. 运行app.py
 

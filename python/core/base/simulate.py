@@ -1,10 +1,10 @@
 import pyautogui
-import core.base.log
+import python.core.base.log
 
 """
 按键操作 屏幕操作
 """
-logger = core.base.log.get_logger()
+logger = python.core.base.log.get_logger()
 
 
 def do_screenshot(screenshot_path, region):

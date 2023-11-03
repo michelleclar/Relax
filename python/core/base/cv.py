@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from core.base.structs import BOX
+from python.core.base.structs import BOX
 
 """
 图片操作

@@ -1,8 +1,7 @@
 import yaml
-from core.base.execute import run, Build, ScriptArgs, Strategy, MatchRule, Policy, Button
-import commons.img_name as img_name
-from core.base.log import get_logger, detail_error
-from core.base.structs import POINT
+from python.core import run, Build, ScriptArgs, Strategy, MatchRule, Policy, Button
+from python.core import get_logger, detail_error
+from python.core import POINT
 
 logger = get_logger()
 

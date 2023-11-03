@@ -8,7 +8,7 @@ def test_write_cvs():
     y_range = (30, 50)
     points = generate_random_points(num_points, x_range, y_range)
     # print(points)
-    with open("./point/point", 'a') as f:
+    with open("point/point", 'a') as f:
         for point in points:
             print(point)
 
@@ -22,7 +22,7 @@ def generate_random_points(num_points, x_range, y_range):
 
 
 def test_read():
-    with open("./point/point", 'r') as f:
+    with open("point/point", 'r') as f:
 
         for line in f:
             chunks = line.split(" ")

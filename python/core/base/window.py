@@ -1,6 +1,6 @@
 import ctypes
 from ctypes import wintypes as w
-from core.base.structs import POINT, BOX
+from python.core.base.structs import POINT, BOX
 
 SW_MINIMIZE = 6
 SW_MAXIMIZE = 3

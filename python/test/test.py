@@ -1,7 +1,7 @@
 import ctypes
 import time
 from ctypes import wintypes as w
-from core.base.structs import POINT, BOX
+from python.core import POINT, BOX
 
 
 def errcheck(result, func, args):

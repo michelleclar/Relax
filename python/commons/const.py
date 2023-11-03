@@ -8,7 +8,7 @@ def init():
 
 
 def execute():
-    import core.base.log as log
+    import python.core.base.log as log
     logger = log.get_logger()
     logger.info("正在读取配置")
     with open("../config.yml", "r") as f:
