@@ -1,7 +1,7 @@
 from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
 from ctypes import c_long, Structure
-from python.commons import STACK_EXCEPTION, QUEUE_EXCEPTION
+from python.commons.exception import STACK_EXCEPTION, QUEUE_EXCEPTION
 
 """
 orderedDict 可以记住键的插入顺序的字典 （map + linked）

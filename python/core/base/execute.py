@@ -7,7 +7,7 @@ import mss
 import numpy as np
 
 from python.commons import exception
-from python.commons.utils import DataFormat
+from python.commons.utils.format import DataFormat
 from python.core.base import simulate
 from python.core.base import cv, log
 from python.core.base.structs import POINT, BOX
@@ -633,7 +633,7 @@ class ScreenExecute(object):
                     # 匹配成功
                     height, width = template.shape[:2]
                     box = BOX(height=height, width=width)
-                    cv.rectangle(target=screenshot, min_loc=pt, box=box)
+                    cv.rectangle(target=screenshot, pt=pt, box=box)
                     if DEBUG:
                         show(f"{self.task_args.win_title}+{match_rule.template_name}",screenshot)
                     return box, pt
@@ -829,7 +829,7 @@ class VideoExecute(object):
                     # 匹配成功
                     height, width = template.shape[:2]
                     box = BOX(height=height, width=width)
-                    cv.rectangle(target=screenshot, min_loc=min_loc, box=box)
+                    cv.rectangle(target=screenshot, pt=min_loc, box=box)
                     return box, min_loc
                 else:
                     # 匹配失败 retry

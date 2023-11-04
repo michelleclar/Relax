@@ -21,8 +21,13 @@ class Rect(w.RECT):
     def __repr__(self):
         return f'Rect(left={self.left},top={self.top},right={self.right},bottom={self.bottom})'
 
+    def to_tuple(self):
+        return (self.left, self.top, self.right, self.bottom)
+
 
 user32 = ctypes.WinDLL('user32', use_last_error=True)
+
+
 # user32.FindWindowW.argtypes = w.LPCWSTR, w.LPCWSTR
 # user32.FindWindowW.restype = w.HWND
 # user32.GetWindowRect.argtypes = w.HWND, ctypes.POINTER(Rect)
@@ -37,7 +42,7 @@ def get_rect_with_title(title: str):
     if hwnd:
         rect = Rect()
         user32.GetWindowRect(hwnd, ctypes.byref(rect))
-        return rect, hwnd
+        return rect.to_tuple(), hwnd
     else:
         print('window not found')
 
@@ -61,7 +66,8 @@ def restore(hWnd):
 def activate(hWnd):
     user32.SetForegroundWindow(hWnd)
 
+
 if __name__ == '__main__':
-    rect , hwnd = get_rect_with_title('主账号')
+    rect, hwnd = get_rect_with_title('主账号')
     restore(hwnd)
     activate(hwnd)

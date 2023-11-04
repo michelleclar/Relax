@@ -21,6 +21,15 @@ def do_match(target, template):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     return [max_val, max_loc]
 
+def get_res(target, template):
+    """
+    模板匹配
+    :param target: 目标图像
+    :param template: 模板图像
+    :return: 置信度 最佳匹配左上角
+    """
+    return cv2.matchTemplate(image=target, templ=template, method=cv2.TM_CCOEFF_NORMED)
+
 
 def show(title, img):
     cv2.imshow(title, img)
@@ -63,8 +72,16 @@ def match_debug(target, result, box):
     cv2.destroyAllWindows()
 
 
-def rectangle(target, min_loc, box: BOX):
-    cv2.rectangle(target, min_loc, (min_loc[0] + box.width, min_loc[1] + box.height), (0, 0, 225), 2)
+def rectangle(target, pt, box: BOX):
+    cv2.rectangle(target, pt, (pt[0] + box.width, pt[1] + box.height), (0, 0, 225), 2)
+
+
+def waitKey(key=None):
+    return cv2.waitKey(key)
+
+
+def destroyAllWindows():
+    cv2.destroyAllWindows()
 
 
 def cache_imread(path):

@@ -15,14 +15,12 @@ kernel32 = ctypes.windll.kernel32
 user32 = ctypes.windll.user32
 
 
-def move():
+def move(point):
     # 设置鼠标光标位置
-    x = 1000
-    y = 1000
-    user32.SetCursorPos(x, y)
+    user32.SetCursorPos(point.x, point.y)
 
 
-def click(point):
+def click():
     user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
     user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
 
@@ -32,11 +30,15 @@ def click(point):
     # user32.keybd_event(ord(key), 0, KEYEVENTF_KEYUP, 0)
 
 
-# if __name__ == '__main__':
-#     move()
-#     from core.base.structs import POINT
-#     import time
-#
-#     # time.sleep(1)
-#
-#     click(POINT(x=500, y=500))
+def lift_click(point):
+    move(point=point)
+    click()
+
+
+if __name__ == '__main__':
+    from python.core.base.structs import POINT
+    import time
+
+    # time.sleep(1)
+    move(POINT(x=500, y=500))
+    click()

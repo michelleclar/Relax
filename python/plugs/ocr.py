@@ -4,6 +4,7 @@ from python.core.base import cv, log
 from paddleocr import PaddleOCR, draw_ocr
 import cv2
 import mss
+import python.core.base.window as win
 
 logger = log.get_logger()
 
@@ -124,8 +125,10 @@ def get_image_center(image_path):
 
 
 def test_ocr():
+    rect, hwnd = win.get_rect_with_title('主账号')
     ocr = PaddleOCR(use_angle_cls=True, lang="ch")
-    monitor = {"top": 40, "left": 0, "width": 800, "height": 640}
+    # monitor = {"top": 40, "left": 0, "width": 800, "height": 640}
+    monitor = rect
     sct = mss.mss()
     sct_img = sct.grab(monitor)
     img = numpy.array(sct_img)
@@ -133,21 +136,39 @@ def test_ocr():
     from PIL import Image
 
     result = ocr.ocr(img, cls=True)
+    boxes = []
+    txts = []
+    scores = []
+    # result = numpy.where(result >= 0.9)
     for idx in range(len(result)):
         res = result[idx]
         for line in res:
-            print(line)
 
+            if line[1][1] > 0.9000:
+                if is_num(line[1][0]):
+                    boxes.append(line[0])
+                    txts.append(line[1][0])
+                    scores.append(line[1][1])
+                    print(line)
 
     res = Image.frombytes('RGB', sct_img.size, sct_img.bgra, 'raw', 'BGRX')
-    result = result[0]
-    boxes = [line[0] for line in result]
-    txts = [line[1][0] for line in result]
-    scores = [line[1][1] for line in result]
+    # result = result[0]
+    # boxes = [line[0] for line in result]
+    # txts = [line[1][0] for line in result]
+    # scores = [line[1][1] for line in result]
     im_show = draw_ocr(res, boxes, txts, scores, font_path='./fonts/simfang.ttf')
     im_show = Image.fromarray(im_show)
     im_show.save('result.jpg')
 
+def is_half_numeric(string):
+    import re
+    match = re.findall(r"\d", string)
+    return len(match) <= len(string) // 2
+
+def is_num(string):
+    import re
+    match = re.findall(r"\d", string)
+    return len(match) == len(string)
 
 if __name__ == '__main__':
     # get_xy("jjtp",True)
