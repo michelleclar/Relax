@@ -3,9 +3,9 @@ import gradio as gr
 import numpy as np
 
 def test_write_cvs():
-    num_points = 1000
-    x_range = (1, 29)
-    y_range = (30, 50)
+    num_points = 10000
+    x_range = (1, 1000)
+    y_range = (20, 50)
     points = generate_random_points(num_points, x_range, y_range)
     # print(points)
     with open("./point/point", 'a') as f:
@@ -64,6 +64,20 @@ def generate_scatterplot(points):
 
     return plot_filename
 
+def transfer_file(file):
+    # 此处添加上传文件处理逻辑
+    # 例如，保存文件到服务器
+    print(f"收到文件：{file.name}")
+
+demo = gr.Interface(
+    transfer_file,
+    inputs="file",
+    outputs=None,
+    title="文件传输",
+    description="选择一个文件进行上传",
+    allow_flagging=False,
+)
+
 # Create a Gradio interface
 iface = gr.Interface(
     fn=generate_scatterplot,
@@ -75,4 +89,6 @@ iface = gr.Interface(
 )
 # Create a Gradio interface
 if __name__ == "__main__":
-    iface.launch()
+    demo.launch()
+    # iface.launch()
+

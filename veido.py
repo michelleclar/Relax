@@ -1,11 +1,13 @@
-import mss
-import core.base.cv as cv
 import time
+
+import cv2
+import mss
 import numpy as np
 import pyautogui
-import cv2
 from memory_profiler import profile
-import numpy as np
+
+import core.base.cv as cv
+
 # 平均帧数 140 内存 74mb cpu 峰值1.2 平均 0.4
 now = lambda: time.time()
 
@@ -63,5 +65,5 @@ def main():
     # print(np.mean(fpss))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

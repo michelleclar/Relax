@@ -1,3 +1,6 @@
+"""
+脚本执行基础数据结构
+"""
 from collections import OrderedDict, defaultdict
 from copy import copy, deepcopy
 from ctypes import c_long, Structure
